@@ -3361,7 +3361,7 @@ class Application(Frame):
             feed_factor = 1.0
         return feed_factor
   
-    def send_data(self,operation_type=None, output_filename=None):
+    def send_data(self,operation_type=None, output_filename="lhymicro_output.txt"):
         num_passes=0
         if self.k40 == None and output_filename == None:
             self.statusMessage.set("Laser Cutter is not Initialized...")
@@ -3592,6 +3592,7 @@ class Application(Frame):
                 raise Exception("No laser data was generated.")    
                 
             self.master.update()
+            
             if output_filename != None:
                 self.write_egv_to_file(data,output_filename)
             else:
