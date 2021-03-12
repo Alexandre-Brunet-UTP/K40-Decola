@@ -16,7 +16,7 @@ We are currently six students working on this project :
 - Arthur MICHEL
 - Charly MENNETEAU
 - Dylan PILARDEAU
-- Oumar FAROUGH BALDE
+- Oumar Farough BALDE
 - Ossama AFKAR
 
 ## The goals 
