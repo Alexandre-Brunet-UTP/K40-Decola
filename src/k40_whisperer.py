@@ -626,23 +626,23 @@ class Application(Frame):
         # Gestion de l'angle et de la psoition du dessin en X et Y
         self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
         
-        self.Label_Angle = Label(self.master,text="Angle")
-        self.Entry_Angle   = Entry(self.master,width="15")
-        self.Entry_Angle.configure(textvariable=self.Reng_passes,justify='center',fg="black")
-        self.Angle.trace_variable("w", self.Entry_Reng_passes_Callback)
-        self.NormalColor =  self.Entry_Angle.cget('bg')
+        #self.Label_Angle = Label(self.master,text="Angle")
+        #self.Entry_Angle   = Entry(self.master,width="15")
+        #self.Entry_Angle.configure(textvariable=self.Reng_passes,justify='center',fg="black")
+       # self.Angle.trace_variable("w", self.Entry_Reng_passes_Callback)
+        #self.NormalColor =  self.Entry_Angle.cget('bg')
 
-        self.Label_PosX = Label(self.master,text="Position X")
-        self.Entry_PosX   = Entry(self.master,width="15")
-        self.Entry_PosX.configure(textvariable=self.Veng_passes,justify='center',fg="blue")
-        self.PosX.trace_variable("w", self.Entry_Veng_passes_Callback)
-        self.NormalColor =  self.Entry_PosX.cget('bg')
+       # self.Label_PosX = Label(self.master,text="Position X")
+        #self.Entry_PosX   = Entry(self.master,width="15")
+       # self.Entry_PosX.configure(textvariable=self.Veng_passes,justify='center',fg="blue")
+       # self.PosX.trace_variable("w", self.Entry_Veng_passes_Callback)
+       # self.NormalColor =  self.Entry_PosX.cget('bg')
 
-        self.Label_PosY = Label(self.master,text="Position Y")
-        self.Entry_PosY   = Entry(self.master,width="15")
-        self.Entry_PosY.configure(textvariable=self.Vcut_passes,justify='center',fg="red")
-        self.PosY.trace_variable("w", self.Entry_Vcut_passes_Callback)
-        self.NormalColor =  self.Entry_Vcut_passes.cget('bg')
+       # self.Label_PosY = Label(self.master,text="Position Y")
+       # self.Entry_PosY   = Entry(self.master,width="15")
+       # self.Entry_PosY.configure(textvariable=self.Vcut_passes,justify='center',fg="red")
+       # self.PosY.trace_variable("w", self.Entry_Vcut_passes_Callback)
+       # self.NormalColor =  self.Entry_Vcut_passes.cget('bg')
 
 
 
