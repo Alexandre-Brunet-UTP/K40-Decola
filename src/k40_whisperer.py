@@ -2009,6 +2009,18 @@ class Application(Frame):
         self.VengData.make_ecoords(svg_reader.eng_lines,scale=1/25.4)
 
         ##########################
+        ### Fill ECOORDS       ###
+        ##########################
+        xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
+        yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        laserX = float(self.LaserXsize.get()) / self.units_scale
+        laserY = float(self.LaserYsize.get()) / self.units_scale
+        print("LaserX")
+        self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+
+
+        ##########################
         ###   Load Image       ###
         ##########################
         self.RengData.set_image(svg_reader.raster_PIL)
