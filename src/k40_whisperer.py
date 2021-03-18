@@ -121,6 +121,7 @@ class Application(Frame):
         self.y = -1
         self.createWidgets()
         self.micro = False
+        toggle_text_output = False;
         
 
     def resetPath(self):
@@ -3363,7 +3364,11 @@ class Application(Frame):
   
     def send_data(self,operation_type=None, output_filename = None):
         num_passes=0
-        output_filename = "lhymicro_output.txt"
+        if self.toggle_text_output:
+            output_filename = "lhymicro_output.txt"
+        
+        
+        
         if self.k40 == None and output_filename == None:
             self.statusMessage.set("Laser Cutter is not Initialized...")
             self.statusbar.configure( bg = 'red' ) 
