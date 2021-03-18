@@ -1,5 +1,15 @@
 #!/usr/bin/python
 """
+
+
+
+
+    DYLAN
+
+
+    
+
+
     K40 Whisperer
 
     Copyright (C) <2017-2020>  <Scorch>
@@ -218,6 +228,7 @@ class Application(Frame):
         self.include_Time = BooleanVar()
 
         self.advanced = BooleanVar()
+        self.designtool = BooleanVar()
         
         self.halftone     = BooleanVar()
         self.mirror       = BooleanVar()
@@ -247,12 +258,19 @@ class Application(Frame):
         self.Vcut_passes = StringVar()
         self.Gcde_passes = StringVar()
         
+        ## Champ de texte du design tool setting
+        self.Angle=StringVar()
+        self.PosX=StringVar()
+        self.PosY=StringVar()
+        
         
         self.board_name = StringVar()
         self.units      = StringVar()
         self.jog_step   = StringVar()
         self.rast_step  = StringVar()
         self.funits     = StringVar()
+        
+        self.optimization_for_filling = bool()
         
 
         self.bezier_M1     = StringVar()
@@ -285,6 +303,8 @@ class Application(Frame):
         self.inkscape_path = StringVar()
         self.batch_path    = StringVar()
         self.ink_timeout   = StringVar()
+        self.check = BooleanVar()
+    
         
         self.t_timeout  = StringVar()
         self.n_timeouts  = StringVar()
@@ -326,6 +346,7 @@ class Application(Frame):
         self.post_beep.set(0)
         self.post_disp.set(0)
         self.post_exec.set(0)
+        self.check.set(0)
         
         self.pre_pr_crc.set(1)
         self.inside_first.set(1)
@@ -576,6 +597,66 @@ class Application(Frame):
         ###########################################################################
         # End Left Column #
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # Design Tool Settings Column    #
+        self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
+        self.Label_Design_Tool_column = Label(self.master,text="Design Tool Settings",anchor=CENTER)
+        self.separator_adv = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
+
+
+        #cacher le menu vertical de Design tool settings
+        self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
+
+
+
+        # Gestion de l'angle et de la psoition du dessin en X et Y
+        self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
+        
+        #self.Label_Angle = Label(self.master,text="Angle")
+        #self.Entry_Angle   = Entry(self.master,width="15")
+        #self.Entry_Angle.configure(textvariable=self.Reng_passes,justify='center',fg="black")
+       # self.Angle.trace_variable("w", self.Entry_Reng_passes_Callback)
+        #self.NormalColor =  self.Entry_Angle.cget('bg')
+
+       # self.Label_PosX = Label(self.master,text="Position X")
+        #self.Entry_PosX   = Entry(self.master,width="15")
+       # self.Entry_PosX.configure(textvariable=self.Veng_passes,justify='center',fg="blue")
+       # self.PosX.trace_variable("w", self.Entry_Veng_passes_Callback)
+       # self.NormalColor =  self.Entry_PosX.cget('bg')
+
+       # self.Label_PosY = Label(self.master,text="Position Y")
+       # self.Entry_PosY   = Entry(self.master,width="15")
+       # self.Entry_PosY.configure(textvariable=self.Vcut_passes,justify='center',fg="red")
+       # self.PosY.trace_variable("w", self.Entry_Vcut_passes_Callback)
+       # self.NormalColor =  self.Entry_Vcut_passes.cget('bg')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         # Advanced Column     #
         self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         self.Label_Advanced_column = Label(self.master,text="Advanced Settings",anchor=CENTER)
@@ -686,6 +767,7 @@ class Application(Frame):
 
         top_File.add_separator()
         top_File.add("command", label = "Open Design (SVG/DXF/G-Code)"  , command = self.menu_File_Open_Design)
+        top_File.add("command", label  = "Load Design with filling", command = self.menu_File_Open_File_with_Filling)
         top_File.add("command", label = "Reload Design"          , command = self.menu_Reload_Design)
 
         top_File.add_separator()    
@@ -739,6 +821,9 @@ class Application(Frame):
         top_Tools.add("command", label = "Calculate Raster Time", command = self.menu_Calc_Raster_Time)
         top_Tools.add("command", label = "Trace Design Boundary <Ctrl-t>", command = self.TRACE_Settings_Window)
         top_Tools.add_separator()
+        top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_hardware)
+        top_Tools.add("command", label = "Go scale software", command = self.menu_go_scale_software)
+        top_Tools.add_separator()
         top_Tools.add("command", label = "Initialize Laser <Ctrl-i>", command = self.Initialize_Laser)
         top_Tools.add_cascade(label="USB", menu=USBmenu)
         USBmenu.add("command", label = "Reset USB", command = self.Reset)
@@ -757,6 +842,8 @@ class Application(Frame):
         top_Settings.add("command", label = "General Settings <F2>", command = self.GEN_Settings_Window)
         top_Settings.add("command", label = "Raster Settings <F3>",  command = self.RASTER_Settings_Window)
         top_Settings.add("command", label = "Rotary Settings <F4>",  command = self.ROTARY_Settings_Window)
+        top_Settings.add_separator()
+        top_Settings.add_checkbutton(label = "Design Tool Settings", variable=self.designtool ,command= self.menu_View_Refresh)
         top_Settings.add_separator()
         top_Settings.add_checkbutton(label = "Advanced Settings <F6>", variable=self.advanced ,command= self.menu_View_Refresh)
         
@@ -1662,6 +1749,14 @@ class Application(Frame):
             message_box(msg1, msg2+msg3)
             
             
+    def Open_with_filling_without_optimization(self):
+        print('Open_with_filling_without_optimization')
+       
+        
+    def Open_with_filling_with_optimization(self):
+       print('Open_with_filling_with_optimization')
+       
+            
     def Entry_units_var_Callback(self):
         if (self.units.get() == 'in') and (self.funits.get()=='mm/s'):
             self.funits.set('in/min')
@@ -1777,9 +1872,84 @@ class Application(Frame):
         else:
             self.Open_G_Code(fileselect)
 
+        ###############################################################
+        
+        # DESIGN_FILE est la variable qui stocke le fichier
+        
+        ###############################################################
             
         self.DESIGN_FILE = fileselect
         self.menu_View_Refresh()
+        
+    def check_radio_button_optimization(self, event):
+        if self.check.get() ==  1:
+            print('Check button checked')
+            self.Open_with_filling_with_optimization()
+            
+        else:
+
+            print('Check button unchecked')
+            self.Open_with_filling_without_optimization()
+        
+    def affiche(self):
+        print(self.optimization_for_filling)
+        
+        
+    def menu_File_Open_File_with_Filling(self):
+        windo_width = 350
+        opti_settings = Toplevel(width=windo_width, height=130) #460+75)
+        opti_settings.grab_set() # Use grab_set to prevent user input in the main window
+        opti_settings.focus_set()
+        opti_settings.resizable(0,0)
+        opti_settings.title('Open File with Filling')
+        opti_settings.iconname("Open File with Filling")
+
+        try:
+            opti_settings.iconbitmap(bitmap="@emblem64")
+        except:
+            debug_message(traceback.format_exc())
+            pass
+
+        D_Yloc  = 6
+        D_dY = 26
+        xd_label_L = 12
+
+        w_label=150
+        w_entry=40
+        w_units=45
+        xd_entry_L=xd_label_L+w_label+10
+        xd_units_L=xd_entry_L+w_entry+5
+        sep_border=10
+
+        #Radio Button
+        D_Yloc=D_Yloc+D_dY
+        self.Label_optimization = Label(opti_settings,text="Optimization")
+        self.Label_optimization.place(x=xd_label_L, y=D_Yloc, width=113, height=21)
+        
+
+        self.Checkbutton_opti = Checkbutton(opti_settings,text="", anchor=W)
+        self.Checkbutton_opti.place(x=w_label+22, y=D_Yloc, width=75, height=23)
+        self.Checkbutton_opti.configure(variable=self.check)
+
+   
+
+        D_Yloc=D_Yloc+D_dY
+        
+        ## Buttons ##
+        opti_settings.update_idletasks()
+        Ybut=int(opti_settings.winfo_height())-30
+        Xbut=int(opti_settings.winfo_width()/2)
+
+        self.OPTI_VALIDATE = Button(opti_settings,text="Validate", command=self.menu_File_Open_Design)
+        self.OPTI_VALIDATE.place(x=Xbut-90, y=Ybut, width=130, height=30, anchor="center")
+        self.OPTI_VALIDATE.bind("<ButtonRelease-1>", self.check_radio_button_optimization)
+        
+        self.OPTI_Close = Button(opti_settings,text="Close")
+        self.OPTI_Close.place(x=Xbut+70, y=Ybut, width=130, height=30, anchor="center")
+        self.OPTI_Close.bind("<ButtonRelease-1>", self.Close_Current_Window_Click)
+
+
+
         
     def menu_File_Raster_Engrave(self):
         self.menu_File_save_EGV(operation_type="Raster_Eng")
@@ -2007,18 +2177,6 @@ class Application(Frame):
         ##########################
         self.VcutData.make_ecoords(svg_reader.cut_lines,scale=1/25.4)
         self.VengData.make_ecoords(svg_reader.eng_lines,scale=1/25.4)
-
-        ##########################
-        ### Fill ECOORDS       ###
-        ##########################
-        xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
-        yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
-        laserX = float(self.LaserXsize.get()) / self.units_scale
-        laserY = float(self.LaserYsize.get()) / self.units_scale
-        print("LaserX")
-        self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
-        self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
-
 
         ##########################
         ###   Load Image       ###
@@ -3373,7 +3531,264 @@ class Application(Frame):
             feed_factor = 1.0
         return feed_factor
   
-    def send_data(self,operation_type=None, output_filename=None):
+    def send_data_for_go_scale(self,operation_type=None, output_filename=None):
+        output_filename = "lhymicro_output_go_scale.txt"
+        num_passes=0
+        if self.k40 == None and output_filename == None:
+            self.statusMessage.set("Laser Cutter is not Initialized...")
+            self.statusbar.configure( bg = 'red' ) 
+            return
+        try:
+            feed_factor=self.feed_factor()
+            
+            if self.inputCSYS.get() and self.RengData.image == None:
+                xmin,xmax,ymin,ymax = 0.0,0.0,0.0,0.0
+            else:
+                xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+                        
+            startx = xmin
+            starty = ymax
+
+            if self.HomeUR.get():
+                FlipXoffset = abs(xmax-xmin)
+                if self.rotate.get():
+                    startx = -xmin
+            else:
+                FlipXoffset = 0
+
+            if self.rotary.get():
+                Rapid_Feed = float(self.rapid_feed.get())*feed_factor
+            else:
+                Rapid_Feed = 0.0
+                
+            Raster_Eng_data=[]
+            Vector_Eng_data=[]
+            Trace_Eng_data=[]
+            Vector_Cut_data=[]
+            G_code_Cut_data=[]
+                        
+            if (operation_type.find("Vector_Cut") > -1) and  (self.VcutData.ecoords!=[]):
+                Feed_Rate = float(self.Vcut_feed.get())*feed_factor
+                self.statusMessage.set("Vector Cut: Determining Cut Order....")
+                self.master.update()
+                if not self.VcutData.sorted and self.inside_first.get():
+                    self.VcutData.set_ecoords(self.optimize_paths(self.VcutData.ecoords),data_sorted=True)
+
+
+##                DEBUG_PLOT=False
+##                test_ecoords=self.VcutData.ecoords
+##                if DEBUG_PLOT:
+##                    import matplotlib.pyplot as plt
+##                    plt.ion()
+##                    plt.clf()         
+##                    X=[]
+##                    Y=[]
+##                    LOOP_OLD = test_ecoords[0][2]
+##                    for i in range(len(test_ecoords)):
+##                        LOOP = test_ecoords[i][2]
+##                        if LOOP != LOOP_OLD:
+##                            plt.plot(X,Y)
+##                            plt.pause(.5)
+##                            X=[]
+##                            Y=[]
+##                            LOOP_OLD=LOOP
+##                        X.append(test_ecoords[i][0])
+##                        Y.append(test_ecoords[i][1])
+##                    plt.plot(X,Y)
+
+
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+
+                Vcut_coords = self.VcutData.ecoords
+                if self.mirror.get() or self.rotate.get():
+                    Vcut_coords = self.mirror_rotate_vector_coords(Vcut_coords)
+
+                Vcut_coords,startx,starty = self.scale_vector_coords(Vcut_coords,startx,starty)
+                Vector_Cut_egv_inst = egv(target=lambda s:Vector_Cut_data.append(s))   
+                Vector_Cut_egv_inst.make_egv_data(
+                                                Vcut_coords,                      \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=False
+                                                )
+
+            if (operation_type.find("Vector_Eng") > -1) and  (self.VengData.ecoords!=[]):
+                Feed_Rate = float(self.Veng_feed.get())*feed_factor
+                self.statusMessage.set("Vector Engrave: Determining Cut Order....")
+                self.master.update()
+                if not self.VengData.sorted and self.inside_first.get():
+                    self.VengData.set_ecoords(self.optimize_paths(self.VengData.ecoords,inside_check=False),data_sorted=True)
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+
+                Veng_coords = self.VengData.ecoords
+                if self.mirror.get() or self.rotate.get():
+                    Veng_coords = self.mirror_rotate_vector_coords(Veng_coords)
+
+                Veng_coords,startx,starty = self.scale_vector_coords(Veng_coords,startx,starty)
+                Vector_Eng_egv_inst = egv(target=lambda s:Vector_Eng_data.append(s))
+                Vector_Eng_egv_inst.make_egv_data(
+                                                Veng_coords,                      \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=False
+                                                )
+
+
+            if (operation_type.find("Trace_Eng") > -1) and (self.trace_coords!=[]):
+                Feed_Rate = float(self.trace_speed.get())*feed_factor
+                laser_on = False
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+                Trace_Eng_egv_inst = egv(target=lambda s:Trace_Eng_data.append(s))
+                Trace_Eng_egv_inst.make_egv_data(
+                                                self.trace_coords,                \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=laser_on
+                                                )
+                
+                
+            if (operation_type.find("Raster_Eng") > -1) and  (self.RengData.ecoords!=[]):
+                Feed_Rate = float(self.Reng_feed.get())*feed_factor
+                Raster_step = self.get_raster_step_1000in()
+                if not self.engraveUP.get():
+                    Raster_step = -Raster_step
+                    
+                raster_startx = 0
+
+                Yscale = float(self.LaserYscale.get())
+                if self.rotary.get():
+                    Rscale = float(self.LaserRscale.get())
+                    Yscale = Yscale*Rscale
+                raster_starty = Yscale*starty
+
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+                Raster_Eng_egv_inst = egv(target=lambda s:Raster_Eng_data.append(s))
+                Raster_Eng_egv_inst.make_egv_data(
+                                                self.RengData.ecoords,            \
+                                                startX=raster_startx,             \
+                                                startY=raster_starty,             \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = Raster_step,        \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=False
+                                                )
+                #self.RengData.reset_path()
+
+            if (operation_type.find("Gcode_Cut") > -1) and (self.GcodeData.ecoords!=[]):
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+                Gcode_coords = self.GcodeData.ecoords
+                if self.mirror.get() or self.rotate.get():
+                    Gcode_coords = self.mirror_rotate_vector_coords(Gcode_coords)
+
+                Gcode_coords,startx,starty = self.scale_vector_coords(Gcode_coords,startx,starty)
+                G_code_Cut_egv_inst = egv(target=lambda s:G_code_Cut_data.append(s))
+                G_code_Cut_egv_inst.make_egv_data(
+                                                Gcode_coords,                     \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = None,                      \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=False
+                                                )
+                
+            ### Join Resulting Data together ###
+            data=[]
+            data.append(ord("I"))
+            if Trace_Eng_data!=[]:
+                trace_passes=1
+                for k in range(trace_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Trace_Eng_data)
+            if Raster_Eng_data!=[]:
+                num_passes = int(float(self.Reng_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Raster_Eng_data)
+            if Vector_Eng_data!=[]:
+                num_passes = int(float(self.Veng_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Vector_Eng_data)
+            if Vector_Cut_data!=[]:
+                num_passes = int(float(self.Vcut_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Vector_Cut_data)
+            if G_code_Cut_data!=[]:
+                num_passes = int(float(self.Gcde_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(G_code_Cut_data)
+            if len(data)< 4:
+                raise Exception("No laser data was generated.")    
+                
+            self.master.update()
+            if output_filename != None:
+                self.write_egv_to_file(data,output_filename)
+            else:
+                self.send_egv_data(data, 1, output_filename)
+                self.menu_View_Refresh()
+                
+        except MemoryError as e:
+            msg1 = "Memory Error:"
+            msg2 = "Memory Error:  Out of Memory."
+            self.statusMessage.set(msg2)
+            self.statusbar.configure( bg = 'red' )
+            message_box(msg1, msg2)
+            debug_message(traceback.format_exc())
+        
+        except Exception as e:
+            msg1 = "Sending Data Stopped: "
+            msg2 = "%s" %(e)
+            if msg2 == "":
+                formatted_lines = traceback.format_exc().splitlines()
+            self.statusMessage.set((msg1+msg2).split("\n")[0] )
+            self.statusbar.configure( bg = 'red' )
+            message_box(msg1, msg2)
+            debug_message(traceback.format_exc())
+    
+    def send_data(self,operation_type=None, output_filename = None):
+        output_filename = "lhymicro_output.txt"
         num_passes=0
         if self.k40 == None and output_filename == None:
             self.statusMessage.set("Laser Cutter is not Initialized...")
@@ -3604,6 +4019,7 @@ class Application(Frame):
                 raise Exception("No laser data was generated.")    
                 
             self.master.update()
+            
             if output_filename != None:
                 self.write_egv_to_file(data,output_filename)
             else:
@@ -3714,6 +4130,10 @@ class Application(Frame):
 
     def Hide_Advanced(self,event=None):
         self.advanced.set(0)
+        self.menu_View_Refresh()
+        
+    def Hide_Design_Tool(self, event=None):
+        self.designtool.set(0)
         self.menu_View_Refresh()
 
     def Release_USB(self):
@@ -3865,6 +4285,20 @@ class Application(Frame):
         self.set_gui("normal")
         self.menu_View_Refresh()
         
+    #TODO
+    def menu_go_scale_hardware(self, output_filename=None):
+        print('menu_go_scale_hardware')
+        self.Prepare_for_laser_run("Vector Cut: Processing Vector Data.")
+        if self.VcutData.ecoords!=[]:
+            self.send_data_for_go_scale("Vector_Cut", output_filename)
+        else:
+            self.statusbar.configure( bg = 'yellow' )
+            self.statusMessage.set("No vector data to cut")
+        self.Finish_Job()
+        
+    #TODO
+    def menu_go_scale_software(self,event=None):
+        print('menu_go_scale_software')
 
     def menu_Help_About(self):
         
@@ -4267,6 +4701,176 @@ class Application(Frame):
                     self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
                     self.separator_vert.place_forget()
 
+
+                ## AYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                ## MENU DESIGN TOOL
+                ##
+                ##
+                ##
+                if self.designtool.get():
+                   
+                    self.PreviewCanvas.configure( width = self.w-240-wadv, height = self.h-50 )
+                    self.PreviewCanvas_frame.place(x=220+wadv, y=10)
+                    self.separator_vert.place(x=220, y=10,width=2, height=self.h-50)
+
+                    adv_Yloc=25-10 #15
+                    self.Label_Design_Tool_column.place(x=Xadvanced, y=adv_Yloc, width=wadv_use, height=21)
+                    adv_Yloc=adv_Yloc+25
+                    self.separator_adv.place(x=Xadvanced, y=adv_Yloc,width=wadv_use, height=2)
+
+                    if h>=560:
+                        adv_Yloc=adv_Yloc+25-20 #15
+                        self.Label_Halftone_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Halftone_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                    
+                        adv_Yloc=adv_Yloc+25
+                        self.Label_Negate_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Negate_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+
+                        adv_Yloc=adv_Yloc+25
+                        self.separator_adv2.place(x=Xadvanced, y=adv_Yloc,width=wadv_use, height=2)
+                    
+                        adv_Yloc=adv_Yloc+25-20
+                        self.Label_Mirror_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Mirror_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+
+                        adv_Yloc=adv_Yloc+25
+                        self.Label_Rotate_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Rotate_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+
+                        adv_Yloc=adv_Yloc+25
+                        self.Label_inputCSYS_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_inputCSYS_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                    
+                        adv_Yloc=adv_Yloc+25
+                        self.separator_adv3.place(x=Xadvanced, y=adv_Yloc,width=wadv_use, height=2)
+
+                        adv_Yloc=adv_Yloc+25-20
+                        self.Label_Inside_First_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Inside_First_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                    
+                        adv_Yloc=adv_Yloc+25
+                        self.Label_Rotary_Enable_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Rotary_Enable_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                    else:
+                        #self.Label_Advanced_column.place_forget()
+                        #self.separator_adv.place_forget()
+                        self.Label_Halftone_adv.place_forget()
+                        self.Checkbutton_Halftone_adv.place_forget()
+                        self.Label_Negate_adv.place_forget()
+                        self.Checkbutton_Negate_adv.place_forget()
+                        self.separator_adv2.place_forget()
+                        self.Label_Mirror_adv.place_forget()
+                        self.Checkbutton_Mirror_adv.place_forget()
+                        self.Label_Rotate_adv.place_forget()
+                        self.Checkbutton_Rotate_adv.place_forget()
+                        self.Label_inputCSYS_adv.place_forget()
+                        self.Checkbutton_inputCSYS_adv.place_forget()
+                        self.separator_adv3.place_forget()
+                        self.Label_Inside_First_adv.place_forget()
+                        self.Checkbutton_Inside_First_adv.place_forget()
+                        self.Label_Rotary_Enable_adv.place_forget()
+                        self.Checkbutton_Rotary_Enable_adv.place_forget()
+
+                    adv_Yloc = BUinit
+                    self.Hide_Design_Button.place (x=Xadvanced, y=adv_Yloc, width=wadv_use, height=30)
+                    
+
+                    if self.RengData.image != None:
+                        self.Label_inputCSYS_adv.configure(state="disabled")
+                        self.Checkbutton_inputCSYS_adv.place_forget()              
+                    else:
+                        self.Label_inputCSYS_adv.configure(state="normal")
+                        
+                    if self.GcodeData.ecoords == []:
+                        #adv_Yloc = adv_Yloc-40
+                        self.Label_Vcut_passes.place(x=Xadvanced, y=Y_Vcut, width=w_label_adv, height=21)
+                        self.Entry_Vcut_passes.place(x=Xadvanced+w_label_adv+2, y=Y_Vcut, width=w_entry, height=23)
+
+                        #adv_Yloc=adv_Yloc-30
+                        self.Label_Veng_passes.place(x=Xadvanced, y=Y_Veng, width=w_label_adv, height=21)
+                        self.Entry_Veng_passes.place(x=Xadvanced+w_label_adv+2, y=Y_Veng, width=w_entry, height=23)
+
+                        #adv_Yloc=adv_Yloc-30
+                        self.Label_Reng_passes.place(x=Xadvanced, y=Y_Reng, width=w_label_adv, height=21)
+                        self.Entry_Reng_passes.place(x=Xadvanced+w_label_adv+2, y=Y_Reng, width=w_entry, height=23)
+                        self.Label_Gcde_passes.place_forget()
+                        self.Entry_Gcde_passes.place_forget()
+                        adv_Yloc = Y_Reng
+
+                       ####
+                        adv_Yloc=adv_Yloc-15
+                        self.separator_comb.place(x=Xadvanced-1, y=adv_Yloc, width=wadv_use, height=2)
+
+                        adv_Yloc=adv_Yloc-25
+                        self.Label_Comb_Vector_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Comb_Vector_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                        
+                        adv_Yloc=adv_Yloc-25
+                        self.Label_Comb_Engrave_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Comb_Engrave_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                        ####
+                        
+                    else:
+                        adv_Yloc=adv_Yloc-40
+                        self.Label_Gcde_passes.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Entry_Gcde_passes.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=w_entry, height=23)
+                        self.Label_Vcut_passes.place_forget()
+                        self.Entry_Vcut_passes.place_forget()
+                        self.Label_Veng_passes.place_forget()
+                        self.Entry_Veng_passes.place_forget()
+                        self.Label_Reng_passes.place_forget()
+                        self.Entry_Reng_passes.place_forget()
+
+                else:
+                    self.PreviewCanvas_frame.place_forget()
+                    self.separator_vert.place_forget()
+                    self.Label_Design_Tool_column.place_forget()
+                    self.separator_adv.place_forget() 
+                    self.Label_Halftone_adv.place_forget()
+                    self.Checkbutton_Halftone_adv.place_forget()
+                    self.Label_Negate_adv.place_forget()
+                    self.Checkbutton_Negate_adv.place_forget()
+                    self.separator_adv2.place_forget()
+                    self.Label_Mirror_adv.place_forget()
+                    self.Checkbutton_Mirror_adv.place_forget()
+                    self.Label_Rotate_adv.place_forget()
+                    self.Checkbutton_Rotate_adv.place_forget()
+                    self.Label_inputCSYS_adv.place_forget()
+                    self.Checkbutton_inputCSYS_adv.place_forget()
+                    self.separator_adv3.place_forget()
+                    self.Label_Inside_First_adv.place_forget()
+                    self.Checkbutton_Inside_First_adv.place_forget()
+
+                    self.Label_Rotary_Enable_adv.place_forget()
+                    self.Checkbutton_Rotary_Enable_adv.place_forget()
+
+                    self.separator_comb.place_forget()
+                    self.Label_Comb_Engrave_adv.place_forget()
+                    self.Checkbutton_Comb_Engrave_adv.place_forget()
+                    self.Label_Comb_Vector_adv.place_forget()
+                    self.Checkbutton_Comb_Vector_adv.place_forget()
+
+
+                    self.Entry_Vcut_passes.place_forget()
+                    self.Label_Vcut_passes.place_forget()
+                    self.Entry_Veng_passes.place_forget()
+                    self.Label_Veng_passes.place_forget()
+                    self.Entry_Reng_passes.place_forget()
+                    self.Label_Reng_passes.place_forget()
+                    self.Label_Gcde_passes.place_forget()
+                    self.Entry_Gcde_passes.place_forget()
+                    self.Hide_Design_Button.place_forget()
+                    
+                    self.PreviewCanvas.configure( width = self.w-240, height = self.h-50 )
+                    self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
+                    self.separator_vert.place_forget()
+                ##
+                ##
+                ##
+                ##
+                ##
+                
                 self.Set_Input_States()
                 
             self.Plot_Data()
@@ -4445,7 +5049,7 @@ class Application(Frame):
                             plot_im = ImageOps.mirror(plot_im)
 
                         if self.rotate.get():
-                            plot_im = plot_im.rotate(90,expand=True)
+                            plot_im = plot_im.rotate(180,expand=True)
                             nh=int(self.SCALE*self.wim)
                             nw=int(self.SCALE*self.him)
                             
