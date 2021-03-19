@@ -821,7 +821,9 @@ class Application(Frame):
         top_Tools.add("command", label = "Calculate Raster Time", command = self.menu_Calc_Raster_Time)
         top_Tools.add("command", label = "Trace Design Boundary <Ctrl-t>", command = self.TRACE_Settings_Window)
         top_Tools.add_separator()
-        top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_hardware)
+        top_Tools.add("command", label = "Fill with design", command = self.menu_filling    )
+        top_Tools.add_separator()
+        top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_software)
         top_Tools.add("command", label = "Go scale software", command = self.menu_go_scale_software)
         top_Tools.add_separator()
         top_Tools.add("command", label = "Initialize Laser <Ctrl-i>", command = self.Initialize_Laser)
@@ -2176,7 +2178,18 @@ class Application(Frame):
         ###   Create ECOORDS   ###
         ##########################
         self.VcutData.make_ecoords(svg_reader.cut_lines,scale=1/25.4)
-        self.VengData.make_ecoords(svg_reader.eng_lines,scale=1/25.4)
+        self.VengData.make_ecoords(svg_reader.eng_lines,scale=1/25.4) 
+        
+        ##########################
+        ### Fill ECOORDS       ###
+        ##########################
+        #xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
+        #yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        #laserX = float(self.LaserXsize.get()) / self.units_scale
+        #laserY = float(self.LaserYsize.get()) / self.units_scale
+        
+        #self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        #self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
 
         ##########################
         ###   Load Image       ###
@@ -3530,6 +3543,19 @@ class Application(Frame):
         else:
             feed_factor = 1.0
         return feed_factor
+    
+    def filling(self):
+        xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+        
+        xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
+        yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        laserX = float(self.LaserXsize.get()) / self.units_scale
+        laserY = float(self.LaserYsize.get()) / self.units_scale
+
+        self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        self.menu_View_Refresh()
+    
   
     def send_data_for_go_scale(self,operation_type=None, output_filename=None):
         output_filename = "lhymicro_output_go_scale.txt"
@@ -4299,6 +4325,12 @@ class Application(Frame):
     #TODO
     def menu_go_scale_software(self,event=None):
         print('menu_go_scale_software')
+
+    #TODO
+    def menu_filling(self,event=None):
+        print('applying filling algorithm')
+        self.filling()
+
 
     def menu_Help_About(self):
         
