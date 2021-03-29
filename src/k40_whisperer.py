@@ -131,7 +131,7 @@ class Application(Frame):
         self.y = -1
         self.createWidgets()
         self.micro = False
-        
+        self.menu_View_Refresh()
 
     def resetPath(self):
         self.RengData  = ECoord()
@@ -258,17 +258,17 @@ class Application(Frame):
         self.Vcut_passes = StringVar()
         self.Gcde_passes = StringVar()
         
-        ## Champ de texte du design tool setting
-        self.Angle=StringVar()
-        self.PosX=StringVar()
-        self.PosY=StringVar()
-        
         
         self.board_name = StringVar()
         self.units      = StringVar()
         self.jog_step   = StringVar()
         self.rast_step  = StringVar()
         self.funits     = StringVar()
+        
+        self.Name       = StringVar()
+        self.Angle      = StringVar()
+        self.PosX       = StringVar()
+        self.PosY       = StringVar()
         
         self.optimization_for_filling = bool()
         
@@ -480,6 +480,10 @@ class Application(Frame):
         self.statusbar.pack(anchor=SW, fill=X, side=BOTTOM)
         
 
+
+
+
+
         # Canvas
         lbframe = Frame( self.master )
         self.PreviewCanvas_frame = lbframe
@@ -500,6 +504,7 @@ class Application(Frame):
         self.separator2 = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         self.separator3 = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         self.separator4 = Frame(self.master, height=2, bd=1, relief=SUNKEN)
+        self.separator5 = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         
         self.Label_Reng_feed_u = Label(self.master,textvariable=self.funits, anchor=W)
         self.Entry_Reng_feed   = Entry(self.master,width="15")
@@ -601,51 +606,41 @@ class Application(Frame):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-        # Design Tool Settings Column    #
-        self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
-        self.Label_Design_Tool_column = Label(self.master,text="Design Tool Settings",anchor=CENTER)
-        self.separator_adv = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
-
-
-        #cacher le menu vertical de Design tool settings
-        self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
-
-
+        self.Label_Design_Tool = Label(self.master, text="Design Tool", anchor=CENTER)
+        self.separator_adv10 = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
+        self.separator_adv11 = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
 
         # Gestion de l'angle et de la psoition du dessin en X et Y
         self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
         
-        #self.Label_Angle = Label(self.master,text="Angle")
-        #self.Entry_Angle   = Entry(self.master,width="15")
-        #self.Entry_Angle.configure(textvariable=self.Reng_passes,justify='center',fg="black")
-       # self.Angle.trace_variable("w", self.Entry_Reng_passes_Callback)
-        #self.NormalColor =  self.Entry_Angle.cget('bg')
+        self.Label_Name = Label(self.master,text="Name")
+        self.Entry_Name   = Entry(self.master,width="15")
+        self.Entry_Name.configure(textvariable=self.Name,justify='center',fg="black")
+        self.Name.trace_variable("w", self.Entry_Reng_passes_Callback)
+        self.NormalColor =  self.Entry_Name.cget('bg')
+        
+        self.Label_Angle = Label(self.master,text="Angle")
+        self.Entry_Angle   = Entry(self.master,width="15")
+        self.Entry_Angle.configure(textvariable=self.Angle,justify='center',fg="black")
+        self.Angle.trace_variable("w", self.Entry_Reng_passes_Callback)
+        self.NormalColor =  self.Entry_Angle.cget('bg')
 
-       # self.Label_PosX = Label(self.master,text="Position X")
-        #self.Entry_PosX   = Entry(self.master,width="15")
-       # self.Entry_PosX.configure(textvariable=self.Veng_passes,justify='center',fg="blue")
-       # self.PosX.trace_variable("w", self.Entry_Veng_passes_Callback)
-       # self.NormalColor =  self.Entry_PosX.cget('bg')
+        self.Label_PosX = Label(self.master,text="Position X")
+        self.Entry_PosX   = Entry(self.master,width="15")
+        self.Entry_PosX.configure(textvariable=self.PosX,justify='center',fg="black")
+        self.PosX.trace_variable("w", self.Entry_Veng_passes_Callback)
+        self.NormalColor =  self.Entry_PosX.cget('bg')
 
-       # self.Label_PosY = Label(self.master,text="Position Y")
-       # self.Entry_PosY   = Entry(self.master,width="15")
-       # self.Entry_PosY.configure(textvariable=self.Vcut_passes,justify='center',fg="red")
-       # self.PosY.trace_variable("w", self.Entry_Vcut_passes_Callback)
-       # self.NormalColor =  self.Entry_Vcut_passes.cget('bg')
-
-
-
+        self.Label_PosY = Label(self.master,text="Position Y")
+        self.Entry_PosY   = Entry(self.master,width="15")
+        self.Entry_PosY.configure(textvariable=self.PosY,justify='center',fg="black")
+        self.PosY.trace_variable("w", self.Entry_Vcut_passes_Callback)
+        self.NormalColor =  self.Entry_PosY.cget('bg')
+        
+        self.Validate_Design_Tool = Button(self.master,text="Validate", command=self.Verify_Input_Design_Tool) # TODO ##########################################################
+        self.Cancel_Design_Tool = Button(self.master,text="Cancel", command=self.Hide_Design_Tool)
+        #cacher le menu vertical de Design tool settings
+        self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
 
 
 
@@ -726,6 +721,11 @@ class Application(Frame):
         self.Reng_passes.trace_variable("w", self.Entry_Reng_passes_Callback)
         self.NormalColor =  self.Entry_Reng_passes.cget('bg')
 
+
+
+
+
+
         self.Label_Veng_passes = Label(self.master,text="Vector Eng. Passes")
         self.Entry_Veng_passes   = Entry(self.master,width="15")
         self.Entry_Veng_passes.configure(textvariable=self.Veng_passes,justify='center',fg="blue")
@@ -747,6 +747,7 @@ class Application(Frame):
         
         self.Hide_Adv_Button = Button(self.master,text="Hide Advanced", command=self.Hide_Advanced)
                 
+        
         # End Right Column #
         self.calc_button = Button(self.master,text="Calculate Raster Time", command=self.menu_Calc_Raster_Time)
 
@@ -4424,11 +4425,11 @@ class Application(Frame):
     def Hide_Advanced(self,event=None):
         self.advanced.set(0)
         self.menu_View_Refresh()
-        
+   
     def Hide_Design_Tool(self, event=None):
         self.designtool.set(0)
         self.menu_View_Refresh()
-
+        
     def Release_USB(self):
         if self.k40 != None:
             try:
@@ -4527,6 +4528,7 @@ class Application(Frame):
         dummy_event = Event()
         dummy_event.widget=self.master
         self.Master_Configure(dummy_event,1)
+        self.Master_Configure2(dummy_event,1)
         self.Plot_Data()
         xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
         W = xmax-xmin
@@ -4556,6 +4558,8 @@ class Application(Frame):
                                   U_display))
 
         self.statusbar.configure( bg = 'white' )
+        self.Master_Configure(dummy_event,1)
+        self.Master_Configure2(dummy_event,1)
         
     def menu_Inside_First_Callback(self, varName, index, mode):
         if self.GcodeData.ecoords != []:
@@ -4568,6 +4572,7 @@ class Application(Frame):
         dummy_event = Event()
         dummy_event.widget=self.master
         self.Master_Configure(dummy_event,1)
+        self.Master_Configure2(dummy_event,1)
 
     def menu_Calc_Raster_Time(self,event=None):
         self.set_gui("disabled")
@@ -4578,7 +4583,6 @@ class Application(Frame):
         self.set_gui("normal")
         self.menu_View_Refresh()
         
-    #TODO
     def menu_go_scale_hardware(self, output_filename=None):
         print('menu_go_scale_hardware')
         self.Prepare_for_laser_run("Vector Cut: Processing Vector Data.")
@@ -4842,7 +4846,7 @@ class Application(Frame):
                     
                 # End Left Column #
 
-                if self.advanced.get():
+                if self.advanced.get(): 
                    
                     self.PreviewCanvas.configure( width = self.w-240-wadv, height = self.h-50 )
                     self.PreviewCanvas_frame.place(x=220+wadv, y=10)
@@ -5000,176 +5004,158 @@ class Application(Frame):
                     self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
                     self.separator_vert.place_forget()
 
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+    #####################################                
+                    
+    
+    def Verify_Input_Design_Tool(self):
+        
+        if self.Name.get() != "" :
+            print(self.Name.get())
+            head, tail = os.path.split(self.DESIGN_FILE)
+            print(self.DESIGN_FILE)
+            print(tail)
+            
+        #check that the value is between 0 and 360
+        if self.Angle.get() != "" :
+            angle_value = float(self.Angle.get()) % 360
+            res = round(angle_value,3)
+            print(res)
+            
+        if self.PosX.get() != "" :
+            print(self.w)
+            print(self.h)
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+                    
+    def Master_Configure2(self, event, update=0):
+        BUinit = self.h-70
+        Yloc = BUinit
+        if event.widget != self.master:
+            return
+        x = int(self.master.winfo_x())
+        y = int(self.master.winfo_y())
+        w = int(self.master.winfo_width())
+        h = int(self.master.winfo_height())
+        if (self.x, self.y) == (-1,-1):
+            self.x, self.y = x,y
+        if abs(self.w-w)>10 or abs(self.h-h)>10 or update==1:
+            ###################################################
+            #  Form changed Size (resized) adjust as required #
+            ###################################################
+            self.w=w
+            self.h=h
 
-                ## AYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-                ## MENU DESIGN TOOL
-                ##
-                ##
-                ##
-                if self.designtool.get():
+            if True:                
+                # Left Column #
+                size_advanced = 220
+                size_design_tool = 220
+                place_object_in_right_panel_x = self.w-150
+                place_object_in_right_panel_y = 10
+                
+                
+                if (self.designtool.get()): 
+                    if(self.advanced.get()):
+                        print('design tool and advanced setting actived')
+                        self.PreviewCanvas.configure( width = self.w-240-size_advanced-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas_frame.place(x=220+size_advanced, y=10)
+                    else :  
+                        self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas_frame.place(x=220, y=10)
                    
-                    self.PreviewCanvas.configure( width = self.w-240-wadv, height = self.h-50 )
-                    self.PreviewCanvas_frame.place(x=220+wadv, y=10)
-                    self.separator_vert.place(x=220, y=10,width=2, height=self.h-50)
-
-                    adv_Yloc=25-10 #15
-                    self.Label_Design_Tool_column.place(x=Xadvanced, y=adv_Yloc, width=wadv_use, height=21)
-                    adv_Yloc=adv_Yloc+25
-                    self.separator_adv.place(x=Xadvanced, y=adv_Yloc,width=wadv_use, height=2)
-
-                    if h>=560:
-                        adv_Yloc=adv_Yloc+25-20 #15
-                        self.Label_Halftone_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Halftone_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                            
+                    self.Label_Design_Tool.place(x=place_object_in_right_panel_x,y=place_object_in_right_panel_y)
+                    self.separator_adv10.place(x=place_object_in_right_panel_x-80, y=place_object_in_right_panel_y+30,width=220, height=2)
                     
-                        adv_Yloc=adv_Yloc+25
-                        self.Label_Negate_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Negate_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-
-                        adv_Yloc=adv_Yloc+25
-                        self.separator_adv2.place(x=Xadvanced, y=adv_Yloc,width=wadv_use, height=2)
+                    self.Hide_Design_Button.place (x=place_object_in_right_panel_x-70, y=Yloc, width=200, height=30)
+                    self.Cancel_Design_Tool.place (x=place_object_in_right_panel_x+35, y=Yloc-35, width=95, height=30)
+                    self.Validate_Design_Tool.place (x=place_object_in_right_panel_x-70, y=Yloc-35, width=95, height=30)
+                    self.Cancel_Design_Tool.configure(bg='light coral')
+                    self.Validate_Design_Tool.configure(bg='green')
                     
-                        adv_Yloc=adv_Yloc+25-20
-                        self.Label_Mirror_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Mirror_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-
-                        adv_Yloc=adv_Yloc+25
-                        self.Label_Rotate_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Rotate_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-
-                        adv_Yloc=adv_Yloc+25
-                        self.Label_inputCSYS_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_inputCSYS_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
                     
-                        adv_Yloc=adv_Yloc+25
-                        self.separator_adv3.place(x=Xadvanced, y=adv_Yloc,width=wadv_use, height=2)
-
-                        adv_Yloc=adv_Yloc+25-20
-                        self.Label_Inside_First_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Inside_First_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                    # TODO
                     
-                        adv_Yloc=adv_Yloc+25
-                        self.Label_Rotary_Enable_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Rotary_Enable_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-                    else:
-                        #self.Label_Advanced_column.place_forget()
-                        #self.separator_adv.place_forget()
-                        self.Label_Halftone_adv.place_forget()
-                        self.Checkbutton_Halftone_adv.place_forget()
-                        self.Label_Negate_adv.place_forget()
-                        self.Checkbutton_Negate_adv.place_forget()
-                        self.separator_adv2.place_forget()
-                        self.Label_Mirror_adv.place_forget()
-                        self.Checkbutton_Mirror_adv.place_forget()
-                        self.Label_Rotate_adv.place_forget()
-                        self.Checkbutton_Rotate_adv.place_forget()
-                        self.Label_inputCSYS_adv.place_forget()
-                        self.Checkbutton_inputCSYS_adv.place_forget()
-                        self.separator_adv3.place_forget()
-                        self.Label_Inside_First_adv.place_forget()
-                        self.Checkbutton_Inside_First_adv.place_forget()
-                        self.Label_Rotary_Enable_adv.place_forget()
-                        self.Checkbutton_Rotary_Enable_adv.place_forget()
-
-                    adv_Yloc = BUinit
-                    self.Hide_Design_Button.place (x=Xadvanced, y=adv_Yloc, width=wadv_use, height=30)
                     
-
-                    if self.RengData.image != None:
-                        self.Label_inputCSYS_adv.configure(state="disabled")
-                        self.Checkbutton_inputCSYS_adv.place_forget()              
-                    else:
-                        self.Label_inputCSYS_adv.configure(state="normal")
+                    
+            
+                    self.Label_PosY.place(x=place_object_in_right_panel_x-80, y=Yloc-70, width=110, height=21)
+                    self.Entry_PosY.place(x=place_object_in_right_panel_x+20, y=Yloc-70, width=110, height=23)
+                  
+                    self.Label_PosX.place(x=place_object_in_right_panel_x-80, y=Yloc-100, width=110, height=21)
+                    self.Entry_PosX.place(x=place_object_in_right_panel_x+20, y=Yloc-100, width=110, height=21)
+        
+                    self.Label_Angle.place(x=place_object_in_right_panel_x-80, y=Yloc-130, width=110, height=21)
+                    self.Entry_Angle.place(x=place_object_in_right_panel_x+20, y=Yloc-130, width=110, height=21)
                         
-                    if self.GcodeData.ecoords == []:
-                        #adv_Yloc = adv_Yloc-40
-                        self.Label_Vcut_passes.place(x=Xadvanced, y=Y_Vcut, width=w_label_adv, height=21)
-                        self.Entry_Vcut_passes.place(x=Xadvanced+w_label_adv+2, y=Y_Vcut, width=w_entry, height=23)
-
-                        #adv_Yloc=adv_Yloc-30
-                        self.Label_Veng_passes.place(x=Xadvanced, y=Y_Veng, width=w_label_adv, height=21)
-                        self.Entry_Veng_passes.place(x=Xadvanced+w_label_adv+2, y=Y_Veng, width=w_entry, height=23)
-
-                        #adv_Yloc=adv_Yloc-30
-                        self.Label_Reng_passes.place(x=Xadvanced, y=Y_Reng, width=w_label_adv, height=21)
-                        self.Entry_Reng_passes.place(x=Xadvanced+w_label_adv+2, y=Y_Reng, width=w_entry, height=23)
-                        self.Label_Gcde_passes.place_forget()
-                        self.Entry_Gcde_passes.place_forget()
-                        adv_Yloc = Y_Reng
-
-                       ####
-                        adv_Yloc=adv_Yloc-15
-                        self.separator_comb.place(x=Xadvanced-1, y=adv_Yloc, width=wadv_use, height=2)
-
-                        adv_Yloc=adv_Yloc-25
-                        self.Label_Comb_Vector_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Comb_Vector_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                    self.Label_Name.place(x=place_object_in_right_panel_x-80, y=Yloc-160, width=110, height=21)
+                    self.Entry_Name.place(x=place_object_in_right_panel_x+20, y=Yloc-160, width=110, height=21)
                         
-                        adv_Yloc=adv_Yloc-25
-                        self.Label_Comb_Engrave_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Comb_Engrave_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-                        ####
-                        
-                    else:
-                        adv_Yloc=adv_Yloc-40
-                        self.Label_Gcde_passes.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Entry_Gcde_passes.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=w_entry, height=23)
-                        self.Label_Vcut_passes.place_forget()
-                        self.Entry_Vcut_passes.place_forget()
-                        self.Label_Veng_passes.place_forget()
-                        self.Entry_Veng_passes.place_forget()
-                        self.Label_Reng_passes.place_forget()
-                        self.Entry_Reng_passes.place_forget()
+                    self.separator_adv11.place(x=place_object_in_right_panel_x-80, y=Yloc-170,width=220, height=2)
 
-                else:
-                    self.PreviewCanvas_frame.place_forget()
-                    self.separator_vert.place_forget()
-                    self.Label_Design_Tool_column.place_forget()
-                    self.separator_adv.place_forget() 
-                    self.Label_Halftone_adv.place_forget()
-                    self.Checkbutton_Halftone_adv.place_forget()
-                    self.Label_Negate_adv.place_forget()
-                    self.Checkbutton_Negate_adv.place_forget()
-                    self.separator_adv2.place_forget()
-                    self.Label_Mirror_adv.place_forget()
-                    self.Checkbutton_Mirror_adv.place_forget()
-                    self.Label_Rotate_adv.place_forget()
-                    self.Checkbutton_Rotate_adv.place_forget()
-                    self.Label_inputCSYS_adv.place_forget()
-                    self.Checkbutton_inputCSYS_adv.place_forget()
-                    self.separator_adv3.place_forget()
-                    self.Label_Inside_First_adv.place_forget()
-                    self.Checkbutton_Inside_First_adv.place_forget()
-
-                    self.Label_Rotary_Enable_adv.place_forget()
-                    self.Checkbutton_Rotary_Enable_adv.place_forget()
-
-                    self.separator_comb.place_forget()
-                    self.Label_Comb_Engrave_adv.place_forget()
-                    self.Checkbutton_Comb_Engrave_adv.place_forget()
-                    self.Label_Comb_Vector_adv.place_forget()
-                    self.Checkbutton_Comb_Vector_adv.place_forget()
-
-
-                    self.Entry_Vcut_passes.place_forget()
-                    self.Label_Vcut_passes.place_forget()
-                    self.Entry_Veng_passes.place_forget()
-                    self.Label_Veng_passes.place_forget()
-                    self.Entry_Reng_passes.place_forget()
-                    self.Label_Reng_passes.place_forget()
-                    self.Label_Gcde_passes.place_forget()
-                    self.Entry_Gcde_passes.place_forget()
+     
+                    
+                else :
+                    self.Label_Design_Tool.place_forget()
+                    self.Label_PosY.place_forget()     
+                    self.Entry_PosY.place_forget()
+                    self.Label_PosX.place_forget()
+                    self.Entry_PosX.place_forget()
+                    self.Entry_Angle.place_forget()
+                    self.Label_Angle.place_forget()
+                    self.Label_Name.place_forget()
+                    self.Entry_Name.place_forget()
+                    self.separator_adv10.place_forget()
+                    self.separator_adv11.place_forget()
+                    self.Validate_Design_Tool.place_forget()
+                    self.Cancel_Design_Tool.place_forget()
                     self.Hide_Design_Button.place_forget()
                     
-                    self.PreviewCanvas.configure( width = self.w-240, height = self.h-50 )
-                    self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
-                    self.separator_vert.place_forget()
-                ##
-                ##
-                ##
-                ##
-                ##
-                
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+           
+                    
+
+
                 self.Set_Input_States()
                 
             self.Plot_Data()
@@ -5348,7 +5334,7 @@ class Application(Frame):
                             plot_im = ImageOps.mirror(plot_im)
 
                         if self.rotate.get():
-                            plot_im = plot_im.rotate(180,expand=True)
+                            plot_im = plot_im.rotate(90,expand=True)
                             nh=int(self.SCALE*self.wim)
                             nw=int(self.SCALE*self.him)
                             
