@@ -824,7 +824,7 @@ class Application(Frame):
         top_Tools.add_separator()
         top_Tools.add("command", label = "Fill with design", command = self.menu_filling    )
         top_Tools.add_separator()
-        top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_software)
+        top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_hardware)
         top_Tools.add("command", label = "Go scale software", command = self.menu_go_scale_software)
         top_Tools.add_separator()
         top_Tools.add("command", label = "Initialize Laser <Ctrl-i>", command = self.Initialize_Laser)
