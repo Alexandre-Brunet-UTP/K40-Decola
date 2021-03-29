@@ -1,7 +1,7 @@
 # GL Project : Decola 
 
 This repository is used for the Decola project. 
-The decola project submitted by the University of Poitiers in France. This project main purpose is to add functionality to the [K40 Whisperer](https://www.scorchworks.com/K40whisperer/k40whisperer.html) software. To do that we are starting from the version vanilla software v0.56.
+The decola project submitted by the University of Poitiers in France. This project main purpose is to add functionality to the [K40 Whisperer](https://www.scorchworks.com/K40whisperer/k40whisperer.html) software. To do that we are starting from the version v0.56.
 
 ## The Teachers
 This project is under the direction of 

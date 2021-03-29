@@ -3899,6 +3899,273 @@ class Application(Frame):
                                                 stop_calc=self.stop,              \
                                                 FlipXoffset=FlipXoffset,          \
                                                 Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=False
+                                                )
+
+            if (operation_type.find("Vector_Eng") > -1) and  (self.VengData.ecoords!=[]):
+                Feed_Rate = float(self.Veng_feed.get())*feed_factor
+                self.statusMessage.set("Vector Engrave: Determining Cut Order....")
+                self.master.update()
+                if not self.VengData.sorted and self.inside_first.get():
+                    self.VengData.set_ecoords(self.optimize_paths(self.VengData.ecoords,inside_check=False),data_sorted=True)
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+
+                Veng_coords = self.VengData.ecoords
+                if self.mirror.get() or self.rotate.get():
+                    Veng_coords = self.mirror_rotate_vector_coords(Veng_coords)
+
+                Veng_coords,startx,starty = self.scale_vector_coords(Veng_coords,startx,starty)
+                Vector_Eng_egv_inst = egv(target=lambda s:Vector_Eng_data.append(s))
+                Vector_Eng_egv_inst.make_egv_data(
+                                                Veng_coords,                      \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=False
+                                                )
+
+
+            if (operation_type.find("Trace_Eng") > -1) and (self.trace_coords!=[]):
+                Feed_Rate = float(self.trace_speed.get())*feed_factor
+                laser_on = False
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+                Trace_Eng_egv_inst = egv(target=lambda s:Trace_Eng_data.append(s))
+                Trace_Eng_egv_inst.make_egv_data(
+                                                self.trace_coords,                \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=laser_on
+                                                )
+                
+                
+            if (operation_type.find("Raster_Eng") > -1) and  (self.RengData.ecoords!=[]):
+                Feed_Rate = float(self.Reng_feed.get())*feed_factor
+                Raster_step = self.get_raster_step_1000in()
+                if not self.engraveUP.get():
+                    Raster_step = -Raster_step
+                    
+                raster_startx = 0
+
+                Yscale = float(self.LaserYscale.get())
+                if self.rotary.get():
+                    Rscale = float(self.LaserRscale.get())
+                    Yscale = Yscale*Rscale
+                raster_starty = Yscale*starty
+
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+                Raster_Eng_egv_inst = egv(target=lambda s:Raster_Eng_data.append(s))
+                Raster_Eng_egv_inst.make_egv_data(
+                                                self.RengData.ecoords,            \
+                                                startX=raster_startx,             \
+                                                startY=raster_starty,             \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = Raster_step,        \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=False
+                                                )
+                #self.RengData.reset_path()
+
+            if (operation_type.find("Gcode_Cut") > -1) and (self.GcodeData.ecoords!=[]):
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+                Gcode_coords = self.GcodeData.ecoords
+                if self.mirror.get() or self.rotate.get():
+                    Gcode_coords = self.mirror_rotate_vector_coords(Gcode_coords)
+
+                Gcode_coords,startx,starty = self.scale_vector_coords(Gcode_coords,startx,starty)
+                G_code_Cut_egv_inst = egv(target=lambda s:G_code_Cut_data.append(s))
+                G_code_Cut_egv_inst.make_egv_data(
+                                                Gcode_coords,                     \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = None,                      \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=False
+                                                )
+                
+            ### Join Resulting Data together ###
+            data=[]
+            data.append(ord("I"))
+            if Trace_Eng_data!=[]:
+                trace_passes=1
+                for k in range(trace_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Trace_Eng_data)
+            if Raster_Eng_data!=[]:
+                num_passes = int(float(self.Reng_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Raster_Eng_data)
+            if Vector_Eng_data!=[]:
+                num_passes = int(float(self.Veng_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Vector_Eng_data)
+            if Vector_Cut_data!=[]:
+                num_passes = int(float(self.Vcut_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Vector_Cut_data)
+            if G_code_Cut_data!=[]:
+                num_passes = int(float(self.Gcde_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(G_code_Cut_data)
+            if len(data)< 4:
+                raise Exception("No laser data was generated.")    
+                
+            self.master.update()
+            
+            if output_filename != None:
+                self.write_egv_to_file(data,output_filename)
+            else:
+                self.send_egv_data(data, 1, output_filename)
+                self.menu_View_Refresh()
+                
+        except MemoryError as e:
+            msg1 = "Memory Error:"
+            msg2 = "Memory Error:  Out of Memory."
+            self.statusMessage.set(msg2)
+            self.statusbar.configure( bg = 'red' )
+            message_box(msg1, msg2)
+            debug_message(traceback.format_exc())
+        
+        except Exception as e:
+            msg1 = "Sending Data Stopped: "
+            msg2 = "%s" %(e)
+            if msg2 == "":
+                formatted_lines = traceback.format_exc().splitlines()
+            self.statusMessage.set((msg1+msg2).split("\n")[0] )
+            self.statusbar.configure( bg = 'red' )
+            message_box(msg1, msg2)
+            debug_message(traceback.format_exc())
+    
+    
+    def Hide_Advanced(self,event=None):
+        self.advanced.set(0)
+        self.menu_View_Refresh()
+        
+    def Hide_Design_Tool(self, event=None):
+        self.designtool.set(0)
+        self.menu_View_Refresh()
+        
+        
+    def send_data(self,operation_type=None, output_filename = None):
+        output_filename = "lhymicro_output.txt"
+        num_passes=0
+        if self.k40 == None and output_filename == None:
+            self.statusMessage.set("Laser Cutter is not Initialized...")
+            self.statusbar.configure( bg = 'red' ) 
+            return
+        try:
+            feed_factor=self.feed_factor()
+            
+            if self.inputCSYS.get() and self.RengData.image == None:
+                xmin,xmax,ymin,ymax = 0.0,0.0,0.0,0.0
+            else:
+                xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+                        
+            startx = xmin
+            starty = ymax
+
+            if self.HomeUR.get():
+                FlipXoffset = abs(xmax-xmin)
+                if self.rotate.get():
+                    startx = -xmin
+            else:
+                FlipXoffset = 0
+
+            if self.rotary.get():
+                Rapid_Feed = float(self.rapid_feed.get())*feed_factor
+            else:
+                Rapid_Feed = 0.0
+                
+            Raster_Eng_data=[]
+            Vector_Eng_data=[]
+            Trace_Eng_data=[]
+            Vector_Cut_data=[]
+            G_code_Cut_data=[]
+                        
+            if (operation_type.find("Vector_Cut") > -1) and  (self.VcutData.ecoords!=[]):
+                Feed_Rate = float(self.Vcut_feed.get())*feed_factor
+                self.statusMessage.set("Vector Cut: Determining Cut Order....")
+                self.master.update()
+                if not self.VcutData.sorted and self.inside_first.get():
+                    self.VcutData.set_ecoords(self.optimize_paths(self.VcutData.ecoords),data_sorted=True)
+
+
+##                DEBUG_PLOT=False
+##                test_ecoords=self.VcutData.ecoords
+##                if DEBUG_PLOT:
+##                    import matplotlib.pyplot as plt
+##                    plt.ion()
+##                    plt.clf()         
+##                    X=[]
+##                    Y=[]
+##                    LOOP_OLD = test_ecoords[0][2]
+##                    for i in range(len(test_ecoords)):
+##                        LOOP = test_ecoords[i][2]
+##                        if LOOP != LOOP_OLD:
+##                            plt.plot(X,Y)
+##                            plt.pause(.5)
+##                            X=[]
+##                            Y=[]
+##                            LOOP_OLD=LOOP
+##                        X.append(test_ecoords[i][0])
+##                        Y.append(test_ecoords[i][1])
+##                    plt.plot(X,Y)
+
+
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+
+                Vcut_coords = self.VcutData.ecoords
+                if self.mirror.get() or self.rotate.get():
+                    Vcut_coords = self.mirror_rotate_vector_coords(Vcut_coords)
+
+                Vcut_coords,startx,starty = self.scale_vector_coords(Vcut_coords,startx,starty)
+                Vector_Cut_egv_inst = egv(target=lambda s:Vector_Cut_data.append(s))   
+                Vector_Cut_egv_inst.make_egv_data(
+                                                Vcut_coords,                      \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
                                                 use_laser=True
                                                 )
 
