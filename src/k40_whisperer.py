@@ -3554,6 +3554,14 @@ class Application(Frame):
 
         self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        
+        xmin = min(xmin, min(self.VcutData.bounds[0], self.VengData.bounds[0]))
+        ymin = min(ymin, min(self.VcutData.bounds[2], self.VengData.bounds[2]))
+        xmax = max(xmax, max(self.VcutData.bounds[1], self.VengData.bounds[1]))
+        ymax = max(ymax, max(self.VcutData.bounds[3], self.VengData.bounds[3]))
+        
+        self.Design_bounds = (xmin,xmax,ymin,ymax)
+        
         self.refreshTime()
         self.menu_View_Refresh()
         
