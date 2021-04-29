@@ -153,6 +153,7 @@ class ECoord:
             yOffset -= step_y
 
         self.ecoords = newEcoords
+        self.computeEcoordsLen()
     
 
 

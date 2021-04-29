@@ -3554,7 +3554,9 @@ class Application(Frame):
 
         self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        self.refreshTime()
         self.menu_View_Refresh()
+        
     
   
     def send_data_for_go_scale(self,operation_type=None, output_filename=None):
