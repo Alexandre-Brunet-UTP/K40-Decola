@@ -2173,6 +2173,7 @@ class Application(Frame):
         ymin = 0
 
         self.Design_bounds = (xmin,xmax,ymin,ymax)
+        self.src_Design_bounds = (xmin,xmax,ymin,ymax)
             
         ##########################
         ###   Create ECOORDS   ###
@@ -2834,6 +2835,16 @@ class Application(Frame):
             xmax = -self.Design_bounds[2]
         else:
             xmin,xmax,ymin,ymax = self.Design_bounds
+        return (xmin,xmax,ymin,ymax)
+    
+    def Get_Src_Design_Bounds(self):
+        if self.rotate.get():
+            ymin =  self.src_Design_bounds[0]
+            ymax =  self.src_Design_bounds[1]
+            xmin = -self.src_Design_bounds[3]
+            xmax = -self.src_Design_bounds[2]
+        else:
+            xmin,xmax,ymin,ymax = self.src_Design_bounds
         return (xmin,xmax,ymin,ymax)
     
     def Move_UL(self,dummy=None):
@@ -3545,10 +3556,16 @@ class Application(Frame):
         return feed_factor
     
     def filling(self):
-        xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+        xmin,xmax,ymin,ymax = self.Get_Src_Design_Bounds()
         
-        xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
-        yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        #xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
+        #yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        
+        xmin = min(xmin, min(self.VcutData.src_bounds[0], self.VengData.src_bounds[0]))
+        ymin = min(ymin, min(self.VcutData.src_bounds[2], self.VengData.src_bounds[2]))
+        xmax = max(xmax, max(self.VcutData.src_bounds[1], self.VengData.src_bounds[1]))
+        ymax = max(ymax, max(self.VcutData.src_bounds[3], self.VengData.src_bounds[3]))
+        
         laserX = float(self.LaserXsize.get()) / self.units_scale
         laserY = float(self.LaserYsize.get()) / self.units_scale
 
