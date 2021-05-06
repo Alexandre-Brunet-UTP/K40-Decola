@@ -1,4 +1,5 @@
 Document type : LHYMICRO-GL file
 Creator-Software: K40 Whisperer
+Laser On : False
 
-%0%0%0%0%ICV1151921011002218Rzzzzzz107Bzzzz170NRBS1EBzzzzzzzzzzzzzzzzzzz066Rzzzzzzzzzzzzzzz074Tzzzzzzzzzzzzzzzzzzz066Lzzzzzzzzzzzzzzz074TcLcBNLzzzzzz104Tzzzz167SEFNSE
+%0%0%0%0%ICV1151921011002218Rzzz239Bzzzzzzz|wNRBS1EMzzz134TMzzzz128LMzzz134BMzzzz128TcLcBNLzzz236Tzzzzzzz|tSEFNSE
