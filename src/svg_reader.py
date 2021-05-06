@@ -811,7 +811,7 @@ class SVG_READER(inkex.Effect):
         else:
             w_string = w_array[0]
         #################
-        w_mm = self.unit2mm(w_string) 
+        w_mm = self.unit2mm(w_string)
         h_mm = self.unit2mm(h_string)
         w_px = self.unit2px(w_string)
         h_px = self.unit2px(h_string)
@@ -835,8 +835,6 @@ class SVG_READER(inkex.Effect):
         scale_w = w_mm/Wpix
         Dx = DXpix * scale_w
         Dy = DYpix * scale_h
-        print("scale_h=", scale_h)
-        print("scale_w=", scale_w)
         
         if abs(1.0-scale_h/scale_w) > .01:
             line1 ="SVG Files with different scales in X and Y are not supported.\n"
@@ -852,7 +850,6 @@ class SVG_READER(inkex.Effect):
                 if layer and not layer in self.layers:
                     self.layers.append(layer)
 
-        #The scaling to apply to the lines when the svg is not in lillimeters
         self.groupmat = [[[scale_w,    0.0,  0.0-Dx],
                           [0.0  , -scale_h, h_mm+Dy]]]
 
