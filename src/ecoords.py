@@ -26,6 +26,8 @@ class ECoord:
         self.reset_path()
 
     def reset_path(self):
+        self.src_ecoords = [] # Ecoords without dupplucation or transformation.
+        self.src_bounds = (0,0,0,0)
         self.ecoords    = []
         self.len        = None
         self.move       = 0
@@ -77,9 +79,12 @@ class ECoord:
             xmin=min(xmin,x1,x2)
             ymin=min(ymin,y1,y2)
         self.bounds = (xmin,xmax,ymin,ymax)
+        self.src_ecoords = self.ecoords
+        self.src_bounds = self.bounds
 
     def set_ecoords(self,ecoords,data_sorted=False):
         self.ecoords = ecoords
+        self.src_ecoords = self.ecoords
         self.computeEcoordsLen()
         self.data_sorted=data_sorted
 
@@ -131,7 +136,8 @@ class ECoord:
     # All units used by fill are using inches as unit
     def fill_area(self, step_x, step_y, areaMaxX, areaMinY):
         # self.bounds(xmin, xmax, ymin, ymax)
-        if len(self.ecoords)==0:
+        if len(self.src_ecoords)==0:
+
             return
         yOffset = 0
         loop = 1
@@ -153,20 +159,21 @@ class ECoord:
             yOffset -= step_y
 
         self.ecoords = newEcoords
+        self.computeEcoordsLen()
     
 
 
     def append_translated_ecoords_to_array(self, dstArray, xOffset, yOffset, loop):
-        oldLoop = self.ecoords[0][2]
-        for i in range(len(self.ecoords)):
+        oldLoop = self.src_ecoords[0][2]
+        for i in range(len(self.src_ecoords)):
 
             #increment the loop if needed
-            if self.ecoords[i][2] != oldLoop:
+            if self.src_ecoords[i][2] != oldLoop:
                 loop = loop+1
-                oldLoop = self.ecoords[i][2]
+                oldLoop = self.src_ecoords[i][2]
 
-            x = self.ecoords[i][0] + xOffset
-            y = self.ecoords[i][1] + yOffset
+            x = self.src_ecoords[i][0] + xOffset
+            y = self.src_ecoords[i][1] + yOffset
             dstArray.append([x, y, loop])
 
         return loop

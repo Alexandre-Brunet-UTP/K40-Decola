@@ -261,6 +261,11 @@ class Application(Frame):
         self.Vcut_passes = StringVar()
         self.Gcde_passes = StringVar()
         
+        ## Champ de texte du design tool setting
+        self.Angle=StringVar()
+        self.PosX=StringVar()
+        self.PosY=StringVar()
+        
         
         self.board_name = StringVar()
         self.units      = StringVar()
@@ -276,7 +281,6 @@ class Application(Frame):
         self.NewAngle      = StringVar()
         self.NewPosX       = StringVar()
         self.NewPosY       = StringVar()
-        
         self.optimization_for_filling = bool()
         
 
@@ -614,9 +618,16 @@ class Application(Frame):
 
 
 
-        self.Label_Design_Tool = Label(self.master, text="Design Tool", anchor=CENTER)
-        self.separator_adv10 = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
-        self.separator_adv11 = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
+
+
+        # Design Tool Settings Column    #
+        self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
+        self.Label_Design_Tool_column = Label(self.master,text="Design Tool Settings",anchor=CENTER)
+        self.separator_adv = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
+
+
+        #cacher le menu vertical de Design tool settings
+        self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
 
         # Gestion de l'angle et de la psoition du dessin en X et Y
         self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
@@ -649,10 +660,6 @@ class Application(Frame):
         self.Cancel_Design_Tool = Button(self.master,text="Cancel", command=self.Hide_Design_Tool)
         #cacher le menu vertical de Design tool settings
         self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
-
-
-
-
 
 
 
@@ -2182,6 +2189,7 @@ class Application(Frame):
         ymin = 0
 
         self.Design_bounds = (xmin,xmax,ymin,ymax)
+        self.src_Design_bounds = (xmin,xmax,ymin,ymax)
             
         ##########################
         ###   Create ECOORDS   ###
@@ -2843,6 +2851,16 @@ class Application(Frame):
             xmax = -self.Design_bounds[2]
         else:
             xmin,xmax,ymin,ymax = self.Design_bounds
+        return (xmin,xmax,ymin,ymax)
+    
+    def Get_Src_Design_Bounds(self):
+        if self.rotate.get():
+            ymin =  self.src_Design_bounds[0]
+            ymax =  self.src_Design_bounds[1]
+            xmin = -self.src_Design_bounds[3]
+            xmax = -self.src_Design_bounds[2]
+        else:
+            xmin,xmax,ymin,ymax = self.src_Design_bounds
         return (xmin,xmax,ymin,ymax)
     
     def Move_UL(self,dummy=None):
@@ -3554,10 +3572,17 @@ class Application(Frame):
         return feed_factor
     
     def filling(self):
-        xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+
+        xmin,xmax,ymin,ymax = self.Get_Src_Design_Bounds()
         
-        xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
-        yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        #xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
+        #yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        
+        xmin = min(xmin, min(self.VcutData.src_bounds[0], self.VengData.src_bounds[0]))
+        ymin = min(ymin, min(self.VcutData.src_bounds[2], self.VengData.src_bounds[2]))
+        xmax = max(xmax, max(self.VcutData.src_bounds[1], self.VengData.src_bounds[1]))
+        ymax = max(ymax, max(self.VcutData.src_bounds[3], self.VengData.src_bounds[3]))
+
         laserX = float(self.LaserXsize.get()) / self.units_scale
         laserY = float(self.LaserYsize.get()) / self.units_scale
 
@@ -3572,7 +3597,7 @@ class Application(Frame):
             output_filename = "lhymicro_output.txt"
         else:
             output_filename = "lhymicro_output_go_scale.txt"
-            
+
         num_passes=0
         if self.k40 == None and output_filename == None:
             self.statusMessage.set("Laser Cutter is not Initialized...")
@@ -3692,7 +3717,7 @@ class Application(Frame):
 
             if (operation_type.find("Trace_Eng") > -1) and (self.trace_coords!=[]):
                 Feed_Rate = float(self.trace_speed.get())*feed_factor
-                laser_on = self.trace_w_laser.get()
+                laser_on = False
                 self.statusMessage.set("Generating EGV data...")
                 self.master.update()
                 Trace_Eng_egv_inst = egv(target=lambda s:Trace_Eng_data.append(s))
@@ -3931,6 +3956,356 @@ class Application(Frame):
         self.designtool.set(0)
         self.menu_View_Refresh()
         
+    def Release_USB(self):
+        if self.k40 != None:
+            try:
+                self.k40.release_usb()
+                self.statusMessage.set("USB Release Succeeded")
+            except:
+                debug_message(traceback.format_exc())
+                pass
+            self.k40=None
+        
+    def Initialize_Laser(self,event=None):
+        if self.GUI_Disabled:
+            return
+        self.stop[0]=True
+        self.Release_USB()
+        self.k40=None
+        self.move_head_window_temporary([0.0,0.0])      
+        self.k40=K40_CLASS()
+        try:
+            self.k40.initialize_device()
+            self.k40.say_hello()
+            if self.init_home.get():
+                self.Home()
+            else:
+                FlipXoffset = 0
+
+            if self.rotary.get():
+                Rapid_Feed = float(self.rapid_feed.get())*feed_factor
+            else:
+                Rapid_Feed = 0.0
+                
+            Raster_Eng_data=[]
+            Vector_Eng_data=[]
+            Trace_Eng_data=[]
+            Vector_Cut_data=[]
+            G_code_Cut_data=[]
+                        
+            if (operation_type.find("Vector_Cut") > -1) and  (self.VcutData.ecoords!=[]):
+                Feed_Rate = float(self.Vcut_feed.get())*feed_factor
+                self.statusMessage.set("Vector Cut: Determining Cut Order....")
+                self.master.update()
+                if not self.VcutData.sorted and self.inside_first.get():
+                    self.VcutData.set_ecoords(self.optimize_paths(self.VcutData.ecoords),data_sorted=True)
+
+
+##                DEBUG_PLOT=False
+##                test_ecoords=self.VcutData.ecoords
+##                if DEBUG_PLOT:
+##                    import matplotlib.pyplot as plt
+##                    plt.ion()
+##                    plt.clf()         
+##                    X=[]
+##                    Y=[]
+##                    LOOP_OLD = test_ecoords[0][2]
+##                    for i in range(len(test_ecoords)):
+##                        LOOP = test_ecoords[i][2]
+##                        if LOOP != LOOP_OLD:
+##                            plt.plot(X,Y)
+##                            plt.pause(.5)
+##                            X=[]
+##                            Y=[]
+##                            LOOP_OLD=LOOP
+##                        X.append(test_ecoords[i][0])
+##                        Y.append(test_ecoords[i][1])
+##                    plt.plot(X,Y)
+
+
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+
+                Vcut_coords = self.VcutData.ecoords
+                if self.mirror.get() or self.rotate.get():
+                    Vcut_coords = self.mirror_rotate_vector_coords(Vcut_coords)
+
+                Vcut_coords,startx,starty = self.scale_vector_coords(Vcut_coords,startx,starty)
+                Vector_Cut_egv_inst = egv(target=lambda s:Vector_Cut_data.append(s))   
+                Vector_Cut_egv_inst.make_egv_data(
+                                                Vcut_coords,                      \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=True
+                                                )
+
+            if (operation_type.find("Vector_Eng") > -1) and  (self.VengData.ecoords!=[]):
+                Feed_Rate = float(self.Veng_feed.get())*feed_factor
+                self.statusMessage.set("Vector Engrave: Determining Cut Order....")
+                self.master.update()
+                if not self.VengData.sorted and self.inside_first.get():
+                    self.VengData.set_ecoords(self.optimize_paths(self.VengData.ecoords,inside_check=False),data_sorted=True)
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+
+                Veng_coords = self.VengData.ecoords
+                if self.mirror.get() or self.rotate.get():
+                    Veng_coords = self.mirror_rotate_vector_coords(Veng_coords)
+
+                Veng_coords,startx,starty = self.scale_vector_coords(Veng_coords,startx,starty)
+                Vector_Eng_egv_inst = egv(target=lambda s:Vector_Eng_data.append(s))
+                Vector_Eng_egv_inst.make_egv_data(
+                                                Veng_coords,                      \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=True
+                                                )
+
+
+            if (operation_type.find("Trace_Eng") > -1) and (self.trace_coords!=[]):
+                Feed_Rate = float(self.trace_speed.get())*feed_factor
+                laser_on = self.trace_w_laser.get()
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+                Trace_Eng_egv_inst = egv(target=lambda s:Trace_Eng_data.append(s))
+                Trace_Eng_egv_inst.make_egv_data(
+                                                self.trace_coords,                \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=laser_on
+                                                )
+                
+                
+            if (operation_type.find("Raster_Eng") > -1) and  (self.RengData.ecoords!=[]):
+                Feed_Rate = float(self.Reng_feed.get())*feed_factor
+                Raster_step = self.get_raster_step_1000in()
+                if not self.engraveUP.get():
+                    Raster_step = -Raster_step
+                    
+                raster_startx = 0
+
+                Yscale = float(self.LaserYscale.get())
+                if self.rotary.get():
+                    Rscale = float(self.LaserRscale.get())
+                    Yscale = Yscale*Rscale
+                raster_starty = Yscale*starty
+
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+                Raster_Eng_egv_inst = egv(target=lambda s:Raster_Eng_data.append(s))
+                Raster_Eng_egv_inst.make_egv_data(
+                                                self.RengData.ecoords,            \
+                                                startX=raster_startx,             \
+                                                startY=raster_starty,             \
+                                                Feed = Feed_Rate,                 \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = Raster_step,        \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=True
+                                                )
+                #self.RengData.reset_path()
+
+            if (operation_type.find("Gcode_Cut") > -1) and (self.GcodeData.ecoords!=[]):
+                self.statusMessage.set("Generating EGV data...")
+                self.master.update()
+                Gcode_coords = self.GcodeData.ecoords
+                if self.mirror.get() or self.rotate.get():
+                    Gcode_coords = self.mirror_rotate_vector_coords(Gcode_coords)
+
+                Gcode_coords,startx,starty = self.scale_vector_coords(Gcode_coords,startx,starty)
+                G_code_Cut_egv_inst = egv(target=lambda s:G_code_Cut_data.append(s))
+                G_code_Cut_egv_inst.make_egv_data(
+                                                Gcode_coords,                     \
+                                                startX=startx,                    \
+                                                startY=starty,                    \
+                                                Feed = None,                      \
+                                                board_name=self.board_name.get(), \
+                                                Raster_step = 0,                  \
+                                                update_gui=self.update_gui,       \
+                                                stop_calc=self.stop,              \
+                                                FlipXoffset=FlipXoffset,          \
+                                                Rapid_Feed_Rate = Rapid_Feed,     \
+                                                use_laser=True
+                                                )
+                
+            ### Join Resulting Data together ###
+            data=[]
+            data.append(ord("I"))
+            if Trace_Eng_data!=[]:
+                trace_passes=1
+                for k in range(trace_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Trace_Eng_data)
+            if Raster_Eng_data!=[]:
+                num_passes = int(float(self.Reng_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Raster_Eng_data)
+            if Vector_Eng_data!=[]:
+                num_passes = int(float(self.Veng_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Vector_Eng_data)
+            if Vector_Cut_data!=[]:
+                num_passes = int(float(self.Vcut_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(Vector_Cut_data)
+            if G_code_Cut_data!=[]:
+                num_passes = int(float(self.Gcde_passes.get()))
+                for k in range(num_passes):
+                    if len(data)> 4:
+                        data[-4]=ord("@")
+                    data.extend(G_code_Cut_data)
+            if len(data)< 4:
+                raise Exception("No laser data was generated.")    
+                
+            self.master.update()
+            
+            if output_filename != None:
+                self.write_egv_to_file(data,output_filename)
+            else:
+                self.send_egv_data(data, 1, output_filename)
+                self.menu_View_Refresh()
+                
+        except MemoryError as e:
+            msg1 = "Memory Error:"
+            msg2 = "Memory Error:  Out of Memory."
+            self.statusMessage.set(msg2)
+            self.statusbar.configure( bg = 'red' )
+            message_box(msg1, msg2)
+            debug_message(traceback.format_exc())
+        
+        except Exception as e:
+            msg1 = "Sending Data Stopped: "
+            msg2 = "%s" %(e)
+            if msg2 == "":
+                formatted_lines = traceback.format_exc().splitlines()
+            self.statusMessage.set((msg1+msg2).split("\n")[0] )
+            self.statusbar.configure( bg = 'red' )
+            message_box(msg1, msg2)
+            debug_message(traceback.format_exc())
+
+    def send_egv_data(self,data,num_passes=1,output_filename=None):        
+        pre_process_CRC        = self.pre_pr_crc.get()
+        if self.k40 != None:
+            self.k40.timeout       = int(float( self.t_timeout.get()  )) 
+            self.k40.n_timeouts    = int(float( self.n_timeouts.get() ))
+            time_start = time()
+            self.k40.send_data(data,self.update_gui,self.stop,num_passes,pre_process_CRC, wait_for_laser=True)
+            self.run_time = time()-time_start
+            if DEBUG:
+                print(("Elapsed Time: %.6f" %(time()-time_start)))
+            
+        else:
+            self.statusMessage.set("Laser is not initialized.")
+            self.statusbar.configure( bg = 'yellow' )
+            return
+        self.menu_View_Refresh()
+        
+    ##########################################################################
+    ##########################################################################
+    def write_egv_to_file(self,data,fname):
+        if len(data) == 0:
+            raise Exception("No data available to write to file.")
+        try:
+            fout = open(fname,'w')
+        except:
+            raise Exception("Unable to open file ( %s ) for writing." %(fname))
+        fout.write("Document type : LHYMICRO-GL file\n")
+        fout.write("Creator-Software: K40 Whisperer\n")
+        
+        fout.write("\n")
+        fout.write("%0%0%0%0%")
+        for char_val in data:
+            char = chr(char_val)
+            fout.write("%s" %(char))
+            
+        #fout.write("\n")
+        fout.close
+        self.menu_View_Refresh()
+        self.statusMessage.set("Data saved to: %s" %(fname))
+        
+    def Home(self, event=None):
+        if self.GUI_Disabled:
+            return
+        if self.k40 != None:
+            self.k40.home_position()
+        self.laserX  = 0.0
+        self.laserY  = 0.0
+        self.pos_offset = [0.0,0.0]
+        self.menu_View_Refresh()
+
+    def GoTo(self):
+        xpos = float(self.gotoX.get())
+        ypos = float(self.gotoY.get())
+        if self.k40 != None:
+            self.k40.home_position()
+        self.laserX  = 0.0
+        self.laserY  = 0.0
+        self.Rapid_Move(xpos,ypos)
+        self.menu_View_Refresh()  
+        
+    def Reset(self):
+        if self.k40 != None:
+            try:
+                self.k40.reset_usb()
+                self.statusMessage.set("USB Reset Succeeded")
+            except:
+                debug_message(traceback.format_exc())
+                pass
+            
+    def Stop(self,event=None):
+        if self.stop[0]==True:
+            return
+        line1 = "Sending data to the laser from K40 Whisperer is currently Paused."
+        line2 = "Press \"OK\" to abort any jobs currently running."
+        line3 = "Press \"Cancel\" to resume."
+        if self.k40 != None:
+            self.k40.pause_un_pause()
+            
+        if message_ask_ok_cancel("Stop Laser Job.", "%s\n\n%s\n%s" %(line1,line2,line3)):
+            self.stop[0]=True
+        else:
+            if self.k40 != None:
+                self.k40.pause_un_pause()
+
+    def Hide_Advanced(self,event=None):
+        self.advanced.set(0)
+        self.menu_View_Refresh()
+        
+    def Hide_Design_Tool(self, event=None):
+        self.designtool.set(0)
+        self.menu_View_Refresh()
+
     def Release_USB(self):
         if self.k40 != None:
             try:
@@ -4505,8 +4880,7 @@ class Application(Frame):
                     self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
                     self.separator_vert.place_forget()
 
-                    
-                    
+            
                     
                     
                     
@@ -4686,34 +5060,9 @@ class Application(Frame):
                     self.Hide_Design_Button.place_forget()
                     
                     
+                  
                     
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-           
-                    
-
-
+ 
                 self.Set_Input_States()
                 
             self.Plot_Data()
@@ -4892,7 +5241,7 @@ class Application(Frame):
                             plot_im = ImageOps.mirror(plot_im)
 
                         if self.rotate.get():
-                            plot_im = plot_im.rotate(90,expand=True)
+                            plot_im = plot_im.rotate(180,expand=True)
                             nh=int(self.SCALE*self.wim)
                             nw=int(self.SCALE*self.him)
                             
