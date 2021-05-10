@@ -3583,11 +3583,18 @@ class Application(Frame):
         xmax = max(xmax, max(self.VcutData.src_bounds[1], self.VengData.src_bounds[1]))
         ymax = max(ymax, max(self.VcutData.src_bounds[3], self.VengData.src_bounds[3]))
 
+        if(self.RengData.src_image != None):
+            xmin = min(xmin,self.RengData.src_bound[0])
+            ymin = min(ymin,self.RengData.src_bound[2])
+            xmax = max(xmax,self.RengData.src_bound[1])
+            ymax = max(ymax,self.RengData.src_bound[3])
+
         laserX = float(self.LaserXsize.get()) / self.units_scale
         laserY = float(self.LaserYsize.get()) / self.units_scale
 
         self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        self.RengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.menu_View_Refresh()
     
   
