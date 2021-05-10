@@ -23,7 +23,6 @@ class ECoord:
         
     def reset(self):
         self.image      = None
-        self.src_image  = None #image without dupplucation or transformation.
         self.reset_path()
 
     def reset_path(self):
@@ -75,13 +74,6 @@ class ECoord:
             self.len = self.len + len_line
             self.ecoords.append([x2,y2,loop])
             oldx, oldy = x2, y2
-            xmax=max(xmax,x1,x2)
-            ymax=max(ymax,y1,y2)
-            xmin=min(xmin,x1,x2)
-            ymin=min(ymin,y1,y2)
-        
-        if(self.src_image != None):
-            (x1,y1,x2,y2) = src_image.getbbox()
             xmax=max(xmax,x1,x2)
             ymax=max(ymax,y1,y2)
             xmin=min(xmin,x1,x2)
@@ -144,37 +136,30 @@ class ECoord:
     # All units used by fill are using inches as unit
     def fill_area(self, step_x, step_y, areaMaxX, areaMinY):
         # self.bounds(xmin, xmax, ymin, ymax)
-        if len(self.src_ecoords) != 0:
-            yOffset = 0
-            loop = 1
-    
-            newEcoords = []
-    
-            # Tant qu'on ne dépasse pas en Y
-            yMin = -step_y
-            while (yMin > areaMinY):            
-                # Tant qu'on ne dépasse pas en X
-                xMax = step_x
-                xOffset = 0
-                while (xMax < areaMaxX):
-                    loop = self.append_translated_ecoords_to_array(newEcoords, xOffset, yOffset, loop) +1
-                    xMax += step_x
-                    xOffset += step_x
-    
-                yMin -= step_y
-                yOffset -= step_y
-    
-            self.ecoords = newEcoords
-            self.computeEcoordsLen()
-        if self.src_image != None :
-            width = (int)(areaMaxX/step_x)
-            height = (int)(areaMinY/step_y)
-            self.image = PIL.Image.new(L,(width,height))
-            for i in range(0,height):                
-                for j in range(0,width):
-                    self.image[j,i] = self.src_image[j%width,i%height]
-            
-            
+        if len(self.src_ecoords)==0:
+
+            return
+        yOffset = 0
+        loop = 1
+
+        newEcoords = []
+
+        # Tant qu'on ne dépasse pas en Y
+        yMin = -step_y
+        while (yMin > areaMinY):            
+            # Tant qu'on ne dépasse pas en X
+            xMax = step_x
+            xOffset = 0
+            while (xMax < areaMaxX):
+                loop = self.append_translated_ecoords_to_array(newEcoords, xOffset, yOffset, loop) +1
+                xMax += step_x
+                xOffset += step_x
+
+            yMin -= step_y
+            yOffset -= step_y
+
+        self.ecoords = newEcoords
+        self.computeEcoordsLen()
     
 
 
