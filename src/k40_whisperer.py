@@ -3573,10 +3573,21 @@ class Application(Frame):
     
     def filling(self):
 
-        xmin,xmax,ymin,ymax = self.Get_Src_Design_Bounds()
+        
+        
+        laserX = float(self.LaserXsize.get()) / self.units_scale
+        laserY = float(self.LaserYsize.get()) / self.units_scale
         
         #xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
         #yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+   
+        svg = svgutils.transform.fromfile(self.DESIGN_FILE)
+        originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
+        figure = svgutils.compose.Figure(self.LaserXsize.get() ,self.LaserYsize.get() , originalSVG)
+        figure.save("design.svg")
+        self.DESIGN_FILE = os.path.dirname("design.svg")
+        
+        xmin,xmax,ymin,ymax = self.Get_Src_Design_Bounds()
         
         xmin = min(xmin, min(self.VcutData.src_bounds[0], self.VengData.src_bounds[0]))
         ymin = min(ymin, min(self.VcutData.src_bounds[2], self.VengData.src_bounds[2]))
@@ -3587,14 +3598,13 @@ class Application(Frame):
             ymin = min(ymin,self.RengData.src_bounds[2])
             xmax = max(xmax,self.RengData.src_bounds[1])
             ymax = max(ymax,self.RengData.src_bounds[3])
-
-        laserX = float(self.LaserXsize.get()) / self.units_scale
-        laserY = float(self.LaserYsize.get()) / self.units_scale
-
+        
+        
         self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.RengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.menu_View_Refresh()
+        
     
   
    

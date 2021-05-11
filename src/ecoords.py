@@ -80,13 +80,14 @@ class ECoord:
             ymax=max(ymax,y1,y2)
             xmin=min(xmin,x1,x2)
             ymin=min(ymin,y1,y2)
-            if(self.src_image != None):
-                (x1,y1,x2,y2) = self.src_image.getbbox()
+            if(self.image != None):
+                (x1,y1,x2,y2) = self.image.getbbox()
                 xmax=max(xmax,x1,x2)
                 ymax=max(ymax,y1,y2)
                 xmin=min(xmin,x1,x2)
                 ymin=min(ymin,y1,y2)
         self.bounds = (xmin,xmax,ymin,ymax)
+        self.src_image = self.image
         self.src_ecoords = self.ecoords
         self.src_bounds = self.bounds
 
@@ -169,7 +170,7 @@ class ECoord:
             self.computeEcoordsLen()
             
         if self.src_image != None :
-            print("entering img mode")
+            print("processing Raster filling (it may take a while)")
             width = (int)(areaMaxX/step_x)
             height = (int)(areaMinY/step_y)
             img_w = (self.src_image.getbbox()[2] - self.src_image.getbbox()[0])
@@ -177,7 +178,6 @@ class ECoord:
             
             width = width * img_w
             height = height * -1 * img_h
-
             self.image = Image.new('L',(width,height))
             img = self.image.load()
             src_img = self.src_image.load()
@@ -185,8 +185,8 @@ class ECoord:
                 for j in range(0,width):
                     img[j,i] = src_img[j%img_w,i%img_h] 
                     
-            self.image = img
-            print("end of loop")
+            self.image.save("image.png")
+            print("Raster filling complete")
         
     
 
