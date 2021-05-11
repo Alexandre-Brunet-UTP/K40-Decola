@@ -767,6 +767,7 @@ class Application(Frame):
 
         top_File.add_separator()
         top_File.add("command", label = "Open Design (SVG/DXF/G-Code)"  , command = self.menu_File_Open_Design)
+        top_File.add("command", label = "Append Design (SVG)"  , command = self.menu_File_Append_Design)
         top_File.add("command", label  = "Load Design with filling", command = self.menu_File_Open_File_with_Filling)
         top_File.add("command", label = "Reload Design"          , command = self.menu_Reload_Design)
 
@@ -1882,6 +1883,35 @@ class Application(Frame):
             
         self.DESIGN_FILE = fileselect
         self.menu_View_Refresh()
+
+    def menu_File_Append_Design(self,event=None):
+        if self.GUI_Disabled:
+            return
+        init_dir = os.path.dirname(self.DESIGN_FILE)
+        if ( not os.path.isdir(init_dir) ):
+            init_dir = self.HOME_DIR
+
+        Name, fileExtension = os.path.splitext(self.DESIGN_FILE)
+        TYPE=fileExtension.upper()
+        fileselect = askopenfilename(filetypes=[("SVG Files ","*.svg")], initialdir=init_dir)
+
+        if fileselect == () or (not os.path.isfile(fileselect)):
+            return
+            
+        Name, fileExtension = os.path.splitext(fileselect)
+        self.update_gui("Opening '%s'" % fileselect )
+        TYPE=fileExtension.upper()
+        if TYPE=='.SVG':
+            self.Append_SVG(fileselect)
+
+        ###############################################################
+        
+        # DESIGN_FILE est la variable qui stocke le fichier
+        
+        ###############################################################
+            
+        self.DESIGN_FILE = fileselect
+        self.menu_View_Refresh()
         
     def check_radio_button_optimization(self, event):
         if self.check.get() ==  1:
@@ -2113,6 +2143,111 @@ class Application(Frame):
 
         
     def Open_SVG(self,filemname):
+        self.resetPath()
+               
+        self.SVG_FILE = filemname
+        svg_reader =  SVG_READER()
+        svg_reader.set_inkscape_path(self.inkscape_path.get())
+        self.input_dpi = 1000
+        svg_reader.image_dpi = self.input_dpi
+        svg_reader.timout = int(float( self.ink_timeout.get())*60.0) 
+        dialog_pxpi    = None
+        dialog_viewbox = None
+        try:
+            try:
+                try:
+                    svg_reader.parse_svg(self.SVG_FILE)
+                    svg_reader.make_paths()
+                except SVG_PXPI_EXCEPTION as e:
+                    pxpi_dialog = pxpiDialog(root,
+                                           self.units.get(),
+                                           svg_reader.SVG_Size,
+                                           svg_reader.SVG_ViewBox,
+                                           svg_reader.SVG_inkscape_version)
+                    
+                    svg_reader = SVG_READER()
+                    svg_reader.set_inkscape_path(self.inkscape_path.get())
+                    if pxpi_dialog.result == None:
+                        return
+                    
+                    dialog_pxpi,dialog_viewbox = pxpi_dialog.result
+                    svg_reader.parse_svg(self.SVG_FILE)
+                    svg_reader.set_size(dialog_pxpi,dialog_viewbox)
+                    svg_reader.make_paths()
+                    
+            except SVG_TEXT_EXCEPTION as e:
+                svg_reader = SVG_READER()
+                svg_reader.set_inkscape_path(self.inkscape_path.get())
+                self.statusMessage.set("Converting TEXT to PATHS.")
+                self.master.update()
+                svg_reader.parse_svg(self.SVG_FILE)
+                if dialog_pxpi != None and dialog_viewbox != None:
+                    svg_reader.set_size(dialog_pxpi,dialog_viewbox)
+                svg_reader.make_paths(txt2paths=True)
+                
+        except Exception as e:
+            msg1 = "SVG Error: "
+            msg2 = "%s" %(e)
+            self.statusMessage.set((msg1+msg2).split("\n")[0] )
+            self.statusbar.configure( bg = 'red' )
+            message_box(msg1, msg2)
+            debug_message(traceback.format_exc())
+            return
+        except:
+            self.statusMessage.set("Unable To open SVG File: %s" %(filemname))
+            debug_message(traceback.format_exc())
+            return
+        xmax = svg_reader.Xsize/25.4
+        ymax = svg_reader.Ysize/25.4
+        xmin = 0
+        ymin = 0
+
+        self.Design_bounds = (xmin,xmax,ymin,ymax)
+        self.src_Design_bounds = (xmin,xmax,ymin,ymax)
+            
+        ##########################
+        ###   Create ECOORDS   ###
+        ##########################
+        self.VcutData.make_ecoords(svg_reader.cut_lines,scale=1/25.4)
+        self.VengData.make_ecoords(svg_reader.eng_lines,scale=1/25.4) 
+        
+        ##########################
+        ### Fill ECOORDS       ###
+        ##########################
+        #xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
+        #yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        #laserX = float(self.LaserXsize.get()) / self.units_scale
+        #laserY = float(self.LaserYsize.get()) / self.units_scale
+        
+        #self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        #self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+
+        ##########################
+        ###   Load Image       ###
+        ##########################
+        self.RengData.set_image(svg_reader.raster_PIL)
+        
+        if (self.RengData.image != None):
+            self.wim, self.him = self.RengData.image.size
+            self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
+            #self.make_raster_coords()
+        self.refreshTime()
+        margin=0.0625 # A bit of margin to prevent the warningwindow for designs that are close to being within the bounds
+        if self.Design_bounds[0] > self.VengData.bounds[0]+margin or\
+           self.Design_bounds[0] > self.VcutData.bounds[0]+margin or\
+           self.Design_bounds[1] < self.VengData.bounds[1]-margin or\
+           self.Design_bounds[1] < self.VcutData.bounds[1]-margin or\
+           self.Design_bounds[2] > self.VengData.bounds[2]+margin or\
+           self.Design_bounds[2] > self.VcutData.bounds[2]+margin or\
+           self.Design_bounds[3] < self.VengData.bounds[3]-margin or\
+           self.Design_bounds[3] < self.VcutData.bounds[3]-margin:
+            line1 = "Warning:\n"
+            line2 = "There is vector cut or vector engrave data located outside of the SVG page bounds.\n\n"
+            line3 = "K40 Whisperer will attempt to use all of the vector data.  "
+            line4 = "Please verify that the vector data is not outside of your lasers working area before engraving."
+            message_box("Warning", line1+line2+line3+line4)
+
+    def Append_SVG(self,filemname):
         self.resetPath()
                
         self.SVG_FILE = filemname
