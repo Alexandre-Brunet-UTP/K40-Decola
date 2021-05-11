@@ -16,13 +16,15 @@
 
 """
 from math import *
+from PIL import Image
 
 class ECoord:
     def __init__(self):
         self.reset()
         
     def reset(self):
-        self.image      = None
+        self.image = None
+        self.src_image = None
         self.reset_path()
 
     def reset_path(self):
@@ -78,6 +80,12 @@ class ECoord:
             ymax=max(ymax,y1,y2)
             xmin=min(xmin,x1,x2)
             ymin=min(ymin,y1,y2)
+            if(self.src_image != None):
+                (x1,y1,x2,y2) = self.src_image.getbbox()
+                xmax=max(xmax,x1,x2)
+                ymax=max(ymax,y1,y2)
+                xmin=min(xmin,x1,x2)
+                ymin=min(ymin,y1,y2)
         self.bounds = (xmin,xmax,ymin,ymax)
         self.src_ecoords = self.ecoords
         self.src_bounds = self.bounds
@@ -90,6 +98,7 @@ class ECoord:
 
     def set_image(self,PIL_image):
         self.image = PIL_image
+        self.src_image = self.image
         self.reset_path()
 
     def computeEcoordsLen(self):  
@@ -136,30 +145,49 @@ class ECoord:
     # All units used by fill are using inches as unit
     def fill_area(self, step_x, step_y, areaMaxX, areaMinY):
         # self.bounds(xmin, xmax, ymin, ymax)
-        if len(self.src_ecoords)==0:
+        if len(self.src_ecoords)!=0:
+            yOffset = 0
+            loop = 1
+    
+            newEcoords = []
+    
+            # Tant qu'on ne dépasse pas en Y
+            yMin = -step_y
+            while (yMin > areaMinY):            
+                # Tant qu'on ne dépasse pas en X
+                xMax = step_x
+                xOffset = 0
+                while (xMax < areaMaxX):
+                    loop = self.append_translated_ecoords_to_array(newEcoords, xOffset, yOffset, loop) +1
+                    xMax += step_x
+                    xOffset += step_x
+    
+                yMin -= step_y
+                yOffset -= step_y
+    
+            self.ecoords = newEcoords
+            self.computeEcoordsLen()
+            
+        if self.src_image != None :
+            print("entering img mode")
+            width = (int)(areaMaxX/step_x)
+            height = (int)(areaMinY/step_y)
+            img_w = (self.src_image.getbbox()[2] - self.src_image.getbbox()[0])
+            img_h = (self.src_image.getbbox()[3] - self.src_image.getbbox()[1])
+            
+            width = width * img_w
+            height = height * -1 * img_h
 
-            return
-        yOffset = 0
-        loop = 1
-
-        newEcoords = []
-
-        # Tant qu'on ne dépasse pas en Y
-        yMin = -step_y
-        while (yMin > areaMinY):            
-            # Tant qu'on ne dépasse pas en X
-            xMax = step_x
-            xOffset = 0
-            while (xMax < areaMaxX):
-                loop = self.append_translated_ecoords_to_array(newEcoords, xOffset, yOffset, loop) +1
-                xMax += step_x
-                xOffset += step_x
-
-            yMin -= step_y
-            yOffset -= step_y
-
-        self.ecoords = newEcoords
-        self.computeEcoordsLen()
+            self.image = Image.new('L',(width,height))
+            img = self.image.load()
+            src_img = self.src_image.load()
+            for i in range(0,height):                
+                for j in range(0,width):
+                    img[j,i] = src_img[j%img_w,i%img_h] 
+                    
+            self.image = img
+            print("end of loop")
+        
     
 
 

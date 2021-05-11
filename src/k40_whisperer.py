@@ -622,7 +622,7 @@ class Application(Frame):
 
         # Design Tool Settings Column    #
         self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
-        self.Label_Design_Tool_column = Label(self.master,text="Design Tool Settings",anchor=CENTER)
+        self.Label_Design_Tool = Label(self.master,text="Design Tool Settings",anchor=CENTER)
         self.separator_adv = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
 
 
@@ -3582,12 +3582,18 @@ class Application(Frame):
         ymin = min(ymin, min(self.VcutData.src_bounds[2], self.VengData.src_bounds[2]))
         xmax = max(xmax, max(self.VcutData.src_bounds[1], self.VengData.src_bounds[1]))
         ymax = max(ymax, max(self.VcutData.src_bounds[3], self.VengData.src_bounds[3]))
+        if(self.RengData.src_image != None):
+            xmin = min(xmin,self.RengData.src_bounds[0])
+            ymin = min(ymin,self.RengData.src_bounds[2])
+            xmax = max(xmax,self.RengData.src_bounds[1])
+            ymax = max(ymax,self.RengData.src_bounds[3])
 
         laserX = float(self.LaserXsize.get()) / self.units_scale
         laserY = float(self.LaserYsize.get()) / self.units_scale
 
         self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        self.RengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.menu_View_Refresh()
     
   
@@ -5010,22 +5016,15 @@ class Application(Frame):
                     else :  
                         self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50 )
                         self.PreviewCanvas_frame.place(x=220, y=10)
-                   
-                            
+                       
                     self.Label_Design_Tool.place(x=place_object_in_right_panel_x,y=place_object_in_right_panel_y)
-                    self.separator_adv10.place(x=place_object_in_right_panel_x-80, y=place_object_in_right_panel_y+30,width=220, height=2)
                     
                     self.Hide_Design_Button.place (x=place_object_in_right_panel_x-70, y=Yloc, width=200, height=30)
                     self.Cancel_Design_Tool.place (x=place_object_in_right_panel_x+35, y=Yloc-35, width=95, height=30)
                     self.Validate_Design_Tool.place (x=place_object_in_right_panel_x-70, y=Yloc-35, width=95, height=30)
                     self.Cancel_Design_Tool.configure(bg='light coral')
                     self.Validate_Design_Tool.configure(bg='green')
-                    
-                    
-                    # TODO
-                    
-                    
-                    
+    
             
                     self.Label_PosY.place(x=place_object_in_right_panel_x-80, y=Yloc-70, width=110, height=21)
                     self.Entry_PosY.place(x=place_object_in_right_panel_x+20, y=Yloc-70, width=110, height=23)
@@ -5039,10 +5038,8 @@ class Application(Frame):
                     self.Label_Name.place(x=place_object_in_right_panel_x-80, y=Yloc-160, width=110, height=21)
                     self.Entry_Name.place(x=place_object_in_right_panel_x+20, y=Yloc-160, width=110, height=21)
                         
-                    self.separator_adv11.place(x=place_object_in_right_panel_x-80, y=Yloc-170,width=220, height=2)
-
-     
                     
+
                 else :
                     self.Label_Design_Tool.place_forget()
                     self.Label_PosY.place_forget()     
@@ -5053,8 +5050,8 @@ class Application(Frame):
                     self.Label_Angle.place_forget()
                     self.Label_Name.place_forget()
                     self.Entry_Name.place_forget()
-                    self.separator_adv10.place_forget()
-                    self.separator_adv11.place_forget()
+                   
+                   
                     self.Validate_Design_Tool.place_forget()
                     self.Cancel_Design_Tool.place_forget()
                     self.Hide_Design_Button.place_forget()
