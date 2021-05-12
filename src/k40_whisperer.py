@@ -50,6 +50,8 @@ import cubicsuperpath
 import cspsubdiv
 import traceback
 import struct
+import svgutils
+from svgutils.compose import *
 
 DEBUG = False
 if DEBUG:
@@ -131,7 +133,7 @@ class Application(Frame):
         self.y = -1
         self.createWidgets()
         self.micro = False
-        
+        self.menu_View_Refresh()
 
     def resetPath(self):
         self.RengData  = ECoord()
@@ -246,6 +248,7 @@ class Application(Frame):
         self.pre_pr_crc   = BooleanVar()
         self.inside_first = BooleanVar()
         self.rotary       = BooleanVar()
+        self.pythagore = BooleanVar()
         
 
         self.ht_size    = StringVar()
@@ -270,7 +273,16 @@ class Application(Frame):
         self.rast_step  = StringVar()
         self.funits     = StringVar()
         
+        self.Name       = StringVar()
+        self.Angle      = StringVar()
+        self.PosX       = StringVar()
+        self.PosY       = StringVar()
+        self.NewName    = StringVar()
+        self.NewAngle      = StringVar()
+        self.NewPosX       = StringVar()
+        self.NewPosY       = StringVar()
         self.optimization_for_filling = bool()
+        self.Scale=StringVar()
         
 
         self.bezier_M1     = StringVar()
@@ -304,6 +316,7 @@ class Application(Frame):
         self.batch_path    = StringVar()
         self.ink_timeout   = StringVar()
         self.check = BooleanVar()
+        self.Write_In_File= BooleanVar()
     
         
         self.t_timeout  = StringVar()
@@ -347,10 +360,12 @@ class Application(Frame):
         self.post_disp.set(0)
         self.post_exec.set(0)
         self.check.set(0)
+        self.pythagore.set(1)
         
         self.pre_pr_crc.set(1)
         self.inside_first.set(1)
         self.rotary.set(0)
+        self.Write_In_File.set(1)
         
         self.ht_size.set(500)
 
@@ -480,6 +495,10 @@ class Application(Frame):
         self.statusbar.pack(anchor=SW, fill=X, side=BOTTOM)
         
 
+
+
+
+
         # Canvas
         lbframe = Frame( self.master )
         self.PreviewCanvas_frame = lbframe
@@ -500,6 +519,7 @@ class Application(Frame):
         self.separator2 = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         self.separator3 = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         self.separator4 = Frame(self.master, height=2, bd=1, relief=SUNKEN)
+        self.separator5 = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         
         self.Label_Reng_feed_u = Label(self.master,textvariable=self.funits, anchor=W)
         self.Entry_Reng_feed   = Entry(self.master,width="15")
@@ -603,53 +623,52 @@ class Application(Frame):
 
 
 
-
-
-
-
-
-
-
-
-
         # Design Tool Settings Column    #
         self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
-        self.Label_Design_Tool_column = Label(self.master,text="Design Tool Settings",anchor=CENTER)
+        self.Label_Design_Tool = Label(self.master,text="Design Tool Settings",anchor=CENTER)
         self.separator_adv = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
 
 
         #cacher le menu vertical de Design tool settings
         self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
 
-
-
         # Gestion de l'angle et de la psoition du dessin en X et Y
         self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
         
-        #self.Label_Angle = Label(self.master,text="Angle")
-        #self.Entry_Angle   = Entry(self.master,width="15")
-        #self.Entry_Angle.configure(textvariable=self.Reng_passes,justify='center',fg="black")
-       # self.Angle.trace_variable("w", self.Entry_Reng_passes_Callback)
-        #self.NormalColor =  self.Entry_Angle.cget('bg')
+        self.Label_Name = Label(self.master,text="Name")
+        self.Entry_Name   = Entry(self.master,width="15")
+        self.Entry_Name.configure(textvariable=self.Name,justify='center',fg="black")
+        self.Name.trace_variable("w", self.Entry_Reng_passes_Callback)
+        self.NormalColor =  self.Entry_Name.cget('bg')
+        
+        self.Label_Scale = Label(self.master,text="Scale")
+        self.Entry_Scale = Entry(self.master,width="15")
+        self.Entry_Scale.configure(textvariable=self.Scale,justify='center',fg="black")
+        self.Scale.trace_variable("w", self.Entry_Reng_passes_Callback)
+        self.NormalColor =  self.Entry_Scale.cget('bg')
+        
+        self.Label_Angle = Label(self.master,text="Angle")
+        self.Entry_Angle   = Entry(self.master,width="15")
+        self.Entry_Angle.configure(textvariable=self.Angle,justify='center',fg="black")
+        self.Angle.trace_variable("w", self.Entry_Reng_passes_Callback)
+        self.NormalColor =  self.Entry_Angle.cget('bg')
 
-       # self.Label_PosX = Label(self.master,text="Position X")
-        #self.Entry_PosX   = Entry(self.master,width="15")
-       # self.Entry_PosX.configure(textvariable=self.Veng_passes,justify='center',fg="blue")
-       # self.PosX.trace_variable("w", self.Entry_Veng_passes_Callback)
-       # self.NormalColor =  self.Entry_PosX.cget('bg')
+        self.Label_PosX = Label(self.master,text="Position X")
+        self.Entry_PosX   = Entry(self.master,width="15")
+        self.Entry_PosX.configure(textvariable=self.PosX,justify='center',fg="black")
+        self.PosX.trace_variable("w", self.Entry_Veng_passes_Callback)
+        self.NormalColor =  self.Entry_PosX.cget('bg')
 
-       # self.Label_PosY = Label(self.master,text="Position Y")
-       # self.Entry_PosY   = Entry(self.master,width="15")
-       # self.Entry_PosY.configure(textvariable=self.Vcut_passes,justify='center',fg="red")
-       # self.PosY.trace_variable("w", self.Entry_Vcut_passes_Callback)
-       # self.NormalColor =  self.Entry_Vcut_passes.cget('bg')
-
-
-
-
-
-
-
+        self.Label_PosY = Label(self.master,text="Position Y")
+        self.Entry_PosY   = Entry(self.master,width="15")
+        self.Entry_PosY.configure(textvariable=self.PosY,justify='center',fg="black")
+        self.PosY.trace_variable("w", self.Entry_Vcut_passes_Callback)
+        self.NormalColor =  self.Entry_PosY.cget('bg')
+        
+        self.Validate_Design_Tool = Button(self.master,text="Validate", command=self.Verify_Input_Design_Tool)
+        self.Cancel_Design_Tool = Button(self.master,text="Cancel", command=self.Hide_Design_Tool)
+        #cacher le menu vertical de Design tool settings
+        self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
 
 
 
@@ -705,6 +724,11 @@ class Application(Frame):
         self.Checkbutton_Rotary_Enable_adv.configure(variable=self.rotary)
         self.rotary.trace_variable("w", self.Reset_RasterPath_and_Update_Time)
 
+        self.Label_Write_In_File = Label(self.master,text="Write in file")
+        self.Checkbutton_Write_In_File = Checkbutton(self.master,text="")
+        self.Checkbutton_Write_In_File.configure(variable=self.Write_In_File)
+
+
 
         #####
         self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
@@ -725,6 +749,11 @@ class Application(Frame):
         self.Entry_Reng_passes.configure(textvariable=self.Reng_passes,justify='center',fg="black")
         self.Reng_passes.trace_variable("w", self.Entry_Reng_passes_Callback)
         self.NormalColor =  self.Entry_Reng_passes.cget('bg')
+
+
+
+
+
 
         self.Label_Veng_passes = Label(self.master,text="Vector Eng. Passes")
         self.Entry_Veng_passes   = Entry(self.master,width="15")
@@ -747,6 +776,7 @@ class Application(Frame):
         
         self.Hide_Adv_Button = Button(self.master,text="Hide Advanced", command=self.Hide_Advanced)
                 
+        
         # End Right Column #
         self.calc_button = Button(self.master,text="Calculate Raster Time", command=self.menu_Calc_Raster_Time)
 
@@ -823,7 +853,7 @@ class Application(Frame):
         top_Tools.add_separator()
         top_Tools.add("command", label = "Fill with design", command = self.menu_filling    )
         top_Tools.add_separator()
-        top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_software)
+        top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_hardware)
         top_Tools.add("command", label = "Go scale software", command = self.menu_go_scale_software)
         top_Tools.add_separator()
         top_Tools.add("command", label = "Initialize Laser <Ctrl-i>", command = self.Initialize_Laser)
@@ -2006,7 +2036,7 @@ class Application(Frame):
                 self.statusbar.configure( bg = 'yellow' )
                 self.statusMessage.set("No raster data to engrave")
                 
-            self.send_data(operation_type=operation_type, output_filename=filename)
+            self.send_data(operation_type=operation_type ,output_filename=filename)
             self.EGV_FILE = filename
         if DEBUG:
             print("time = %d seconds" %(int(time()-start)))
@@ -3094,7 +3124,7 @@ class Application(Frame):
     def Vector_Cut(self, output_filename=None):
         self.Prepare_for_laser_run("Vector Cut: Processing Vector Data.")
         if self.VcutData.ecoords!=[]:
-            self.send_data("Vector_Cut", output_filename)
+            self.send_data("Vector_Cut", True, output_filename)
         else:
             self.statusbar.configure( bg = 'yellow' )
             self.statusMessage.set("No vector data to cut")
@@ -3103,7 +3133,7 @@ class Application(Frame):
     def Vector_Eng(self, output_filename=None):
         self.Prepare_for_laser_run("Vector Engrave: Processing Vector Data.")
         if self.VengData.ecoords!=[]:
-            self.send_data("Vector_Eng", output_filename)
+            self.send_data("Vector_Eng", True, output_filename)
         else:
             self.statusbar.configure( bg = 'yellow' )
             self.statusMessage.set("No vector data to engrave")
@@ -3114,7 +3144,7 @@ class Application(Frame):
         self.trace_coords = self.make_trace_path()
 
         if self.trace_coords!=[]:
-            self.send_data("Trace_Eng", output_filename)
+            self.send_data("Trace_Eng",True, output_filename)
         else:
             self.statusbar.configure( bg = 'yellow' )
             self.statusMessage.set("No trace data to follow")
@@ -3125,7 +3155,7 @@ class Application(Frame):
         try:
             self.make_raster_coords()
             if self.RengData.ecoords!=[]:
-                self.send_data("Raster_Eng", output_filename)
+                self.send_data("Raster_Eng", True, output_filename)
             else:
                 self.statusbar.configure( bg = 'yellow' )
                 self.statusMessage.set("No raster data to engrave")
@@ -3152,7 +3182,7 @@ class Application(Frame):
         try:
             self.make_raster_coords()
             if self.RengData.ecoords!=[] or self.VengData.ecoords!=[]:
-                self.send_data("Raster_Eng+Vector_Eng", output_filename)
+                self.send_data("Raster_Eng+Vector_Eng", True, output_filename)
             else:
                 self.statusbar.configure( bg = 'yellow' )
                 self.statusMessage.set("No data to engrave")
@@ -3168,7 +3198,7 @@ class Application(Frame):
     def Vector_Eng_Cut(self, output_filename=None):
         self.Prepare_for_laser_run("Vector Cut: Processing Vector Data.")
         if self.VcutData.ecoords!=[] or self.VengData.ecoords!=[]:
-            self.send_data("Vector_Eng+Vector_Cut", output_filename)
+            self.send_data("Vector_Eng+Vector_Cut", True, output_filename)
         else:
             self.statusbar.configure( bg = 'yellow' )
             self.statusMessage.set("No vector data.")
@@ -3179,7 +3209,7 @@ class Application(Frame):
         try:
             self.make_raster_coords()
             if self.RengData.ecoords!=[] or self.VengData.ecoords!=[] or self.VcutData.ecoords!=[]:
-                self.send_data("Raster_Eng+Vector_Eng+Vector_Cut", output_filename)
+                self.send_data("Raster_Eng+Vector_Eng+Vector_Cut", True, output_filename)
             else:
                 self.statusbar.configure( bg = 'yellow' )
                 self.statusMessage.set("No data to engrave/cut")
@@ -3195,7 +3225,7 @@ class Application(Frame):
     def Gcode_Cut(self, output_filename=None):
         self.Prepare_for_laser_run("G Code Cutting.")
         if self.GcodeData.ecoords!=[]:
-            self.send_data("Gcode_Cut", output_filename)
+            self.send_data("Gcode_Cut", True, output_filename)
         else:
             self.statusbar.configure( bg = 'yellow' )
             self.statusMessage.set("No g-code data to cut")
@@ -3556,6 +3586,7 @@ class Application(Frame):
         return feed_factor
     
     def filling(self):
+
         xmin,xmax,ymin,ymax = self.Get_Src_Design_Bounds()
         
         #xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
@@ -3565,27 +3596,23 @@ class Application(Frame):
         ymin = min(ymin, min(self.VcutData.src_bounds[2], self.VengData.src_bounds[2]))
         xmax = max(xmax, max(self.VcutData.src_bounds[1], self.VengData.src_bounds[1]))
         ymax = max(ymax, max(self.VcutData.src_bounds[3], self.VengData.src_bounds[3]))
-        
+
         laserX = float(self.LaserXsize.get()) / self.units_scale
         laserY = float(self.LaserYsize.get()) / self.units_scale
 
         self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
-        
-        xmin = min(xmin, min(self.VcutData.bounds[0], self.VengData.bounds[0]))
-        ymin = min(ymin, min(self.VcutData.bounds[2], self.VengData.bounds[2]))
-        xmax = max(xmax, max(self.VcutData.bounds[1], self.VengData.bounds[1]))
-        ymax = max(ymax, max(self.VcutData.bounds[3], self.VengData.bounds[3]))
-        
-        self.Design_bounds = (xmin,xmax,ymin,ymax)
-        
-        self.refreshTime()
         self.menu_View_Refresh()
-        
     
   
-    def send_data_for_go_scale(self,operation_type=None, output_filename=None):
-        output_filename = "lhymicro_output_go_scale.txt"
+   
+    def send_data(self,operation_type=None, laseron = True, output_filename = None):
+        if self.Write_In_File.get() == 1 : 
+            if laseron == True :
+                output_filename = "lhymicro_output.txt"
+            else:
+                output_filename = "lhymicro_output_go_scale.txt"
+
         num_passes=0
         if self.k40 == None and output_filename == None:
             self.statusMessage.set("Laser Cutter is not Initialized...")
@@ -3670,7 +3697,7 @@ class Application(Frame):
                                                 stop_calc=self.stop,              \
                                                 FlipXoffset=FlipXoffset,          \
                                                 Rapid_Feed_Rate = Rapid_Feed,     \
-                                                use_laser=False
+                                                use_laser=laseron
                                                 )
 
             if (operation_type.find("Vector_Eng") > -1) and  (self.VengData.ecoords!=[]):
@@ -3699,7 +3726,7 @@ class Application(Frame):
                                                 stop_calc=self.stop,              \
                                                 FlipXoffset=FlipXoffset,          \
                                                 Rapid_Feed_Rate = Rapid_Feed,     \
-                                                use_laser=False
+                                                use_laser=laseron
                                                 )
 
 
@@ -3720,7 +3747,7 @@ class Application(Frame):
                                                 stop_calc=self.stop,              \
                                                 FlipXoffset=FlipXoffset,          \
                                                 Rapid_Feed_Rate = Rapid_Feed,     \
-                                                use_laser=laser_on
+                                                use_laser= laser_on 
                                                 )
                 
                 
@@ -3752,7 +3779,7 @@ class Application(Frame):
                                                 stop_calc=self.stop,              \
                                                 FlipXoffset=FlipXoffset,          \
                                                 Rapid_Feed_Rate = Rapid_Feed,     \
-                                                use_laser=False
+                                                use_laser=laseron
                                                 )
                 #self.RengData.reset_path()
 
@@ -3776,7 +3803,7 @@ class Application(Frame):
                                                 stop_calc=self.stop,              \
                                                 FlipXoffset=FlipXoffset,          \
                                                 Rapid_Feed_Rate = Rapid_Feed,     \
-                                                use_laser=False
+                                                use_laser=laseron
                                                 )
                 
             ### Join Resulting Data together ###
@@ -3816,10 +3843,11 @@ class Application(Frame):
                 raise Exception("No laser data was generated.")    
                 
             self.master.update()
+            
             if output_filename != None:
-                self.write_egv_to_file(data,output_filename)
+                self.write_egv_to_file(data,laseron,output_filename)
             else:
-                self.send_egv_data(data, 1, output_filename)
+                self.send_egv_data(data, 1, laseron, output_filename)
                 self.menu_View_Refresh()
                 
         except MemoryError as e:
@@ -3840,28 +3868,132 @@ class Application(Frame):
             message_box(msg1, msg2)
             debug_message(traceback.format_exc())
     
-    def send_data(self,operation_type=None, output_filename = None):
-        output_filename = "lhymicro_output.txt"
-        num_passes=0
-        if self.k40 == None and output_filename == None:
-            self.statusMessage.set("Laser Cutter is not Initialized...")
-            self.statusbar.configure( bg = 'red' ) 
-            return
-        try:
-            feed_factor=self.feed_factor()
-            
-            if self.inputCSYS.get() and self.RengData.image == None:
-                xmin,xmax,ymin,ymax = 0.0,0.0,0.0,0.0
-            else:
-                xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
-                        
-            startx = xmin
-            starty = ymax
+    
+    def Hide_Advanced(self,event=None):
+        self.advanced.set(0)
+        self.menu_View_Refresh()
+        
+    def Hide_Design_Tool(self, event=None):
+        self.designtool.set(0)
+        self.menu_View_Refresh()
+        
 
-            if self.HomeUR.get():
-                FlipXoffset = abs(xmax-xmin)
-                if self.rotate.get():
-                    startx = -xmin
+    def send_egv_data(self,data,num_passes=1,output_filename=None):        
+        pre_process_CRC        = self.pre_pr_crc.get()
+        if self.k40 != None:
+            self.k40.timeout       = int(float( self.t_timeout.get()  )) 
+            self.k40.n_timeouts    = int(float( self.n_timeouts.get() ))
+            time_start = time()
+            self.k40.send_data(data,self.update_gui,self.stop,num_passes,pre_process_CRC, wait_for_laser=True)
+            self.run_time = time()-time_start
+            if DEBUG:
+                print(("Elapsed Time: %.6f" %(time()-time_start)))
+            
+        else:
+            self.statusMessage.set("Laser is not initialized.")
+            self.statusbar.configure( bg = 'yellow' )
+            return
+        self.menu_View_Refresh()
+        
+    ##########################################################################
+    ##########################################################################
+    def write_egv_to_file(self, data, laseron, fname):
+        if len(data) == 0:
+            raise Exception("No data available to write to file.")
+        try:
+            fout = open(fname,'w')
+        except:
+            raise Exception("Unable to open file ( %s ) for writing." %(fname))
+        fout.write("Document type : LHYMICRO-GL file\n")
+        fout.write("Creator-Software: K40 Whisperer\n")
+        fout.write("Laser On : %s\n" %(laseron))
+        
+        fout.write("\n")
+        fout.write("%0%0%0%0%")
+        for char_val in data:
+            char = chr(char_val)
+            fout.write("%s" %(char))
+            
+        #fout.write("\n")
+        fout.close
+        self.menu_View_Refresh()
+        self.statusMessage.set("Data saved to: %s" %(fname))
+        
+    def Home(self, event=None):
+        if self.GUI_Disabled:
+            return
+        if self.k40 != None:
+            self.k40.home_position()
+        self.laserX  = 0.0
+        self.laserY  = 0.0
+        self.pos_offset = [0.0,0.0]
+        self.menu_View_Refresh()
+
+    def GoTo(self):
+        xpos = float(self.gotoX.get())
+        ypos = float(self.gotoY.get())
+        if self.k40 != None:
+            self.k40.home_position()
+        self.laserX  = 0.0
+        self.laserY  = 0.0
+        self.Rapid_Move(xpos,ypos)
+        self.menu_View_Refresh()  
+        
+    def Reset(self):
+        if self.k40 != None:
+            try:
+                self.k40.reset_usb()
+                self.statusMessage.set("USB Reset Succeeded")
+            except:
+                debug_message(traceback.format_exc())
+                pass
+            
+    def Stop(self,event=None):
+        if self.stop[0]==True:
+            return
+        line1 = "Sending data to the laser from K40 Whisperer is currently Paused."
+        line2 = "Press \"OK\" to abort any jobs currently running."
+        line3 = "Press \"Cancel\" to resume."
+        if self.k40 != None:
+            self.k40.pause_un_pause()
+            
+        if message_ask_ok_cancel("Stop Laser Job.", "%s\n\n%s\n%s" %(line1,line2,line3)):
+            self.stop[0]=True
+        else:
+            if self.k40 != None:
+                self.k40.pause_un_pause()
+
+    def Hide_Advanced(self,event=None):
+        self.advanced.set(0)
+        self.menu_View_Refresh()
+   
+    def Hide_Design_Tool(self, event=None):
+        self.designtool.set(0)
+        self.menu_View_Refresh()
+        
+    def Release_USB(self):
+        if self.k40 != None:
+            try:
+                self.k40.release_usb()
+                self.statusMessage.set("USB Release Succeeded")
+            except:
+                debug_message(traceback.format_exc())
+                pass
+            self.k40=None
+        
+    def Initialize_Laser(self,event=None):
+        if self.GUI_Disabled:
+            return
+        self.stop[0]=True
+        self.Release_USB()
+        self.k40=None
+        self.move_head_window_temporary([0.0,0.0])      
+        self.k40=K40_CLASS()
+        try:
+            self.k40.initialize_device()
+            self.k40.say_hello()
+            if self.init_home.get():
+                self.Home()
             else:
                 FlipXoffset = 0
 
@@ -4074,7 +4206,7 @@ class Application(Frame):
             self.master.update()
             
             if output_filename != None:
-                self.write_egv_to_file(data,output_filename)
+                self.write_egv_to_file(data,True, output_filename)
             else:
                 self.send_egv_data(data, 1, output_filename)
                 self.menu_View_Refresh()
@@ -4116,26 +4248,6 @@ class Application(Frame):
         
     ##########################################################################
     ##########################################################################
-    def write_egv_to_file(self,data,fname):
-        if len(data) == 0:
-            raise Exception("No data available to write to file.")
-        try:
-            fout = open(fname,'w')
-        except:
-            raise Exception("Unable to open file ( %s ) for writing." %(fname))
-        fout.write("Document type : LHYMICRO-GL file\n")
-        fout.write("Creator-Software: K40 Whisperer\n")
-        
-        fout.write("\n")
-        fout.write("%0%0%0%0%")
-        for char_val in data:
-            char = chr(char_val)
-            fout.write("%s" %(char))
-            
-        #fout.write("\n")
-        fout.close
-        self.menu_View_Refresh()
-        self.statusMessage.set("Data saved to: %s" %(fname))
         
     def Home(self, event=None):
         if self.GUI_Disabled:
@@ -4287,6 +4399,7 @@ class Application(Frame):
         dummy_event = Event()
         dummy_event.widget=self.master
         self.Master_Configure(dummy_event,1)
+        self.Master_Configure2(dummy_event,1)
         self.Plot_Data()
         xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
         W = xmax-xmin
@@ -4316,6 +4429,8 @@ class Application(Frame):
                                   U_display))
 
         self.statusbar.configure( bg = 'white' )
+        self.Master_Configure(dummy_event,1)
+        self.Master_Configure2(dummy_event,1)
         
     def menu_Inside_First_Callback(self, varName, index, mode):
         if self.GcodeData.ecoords != []:
@@ -4328,6 +4443,7 @@ class Application(Frame):
         dummy_event = Event()
         dummy_event.widget=self.master
         self.Master_Configure(dummy_event,1)
+        self.Master_Configure2(dummy_event,1)
 
     def menu_Calc_Raster_Time(self,event=None):
         self.set_gui("disabled")
@@ -4338,12 +4454,11 @@ class Application(Frame):
         self.set_gui("normal")
         self.menu_View_Refresh()
         
-    #TODO
     def menu_go_scale_hardware(self, output_filename=None):
         print('menu_go_scale_hardware')
         self.Prepare_for_laser_run("Vector Cut: Processing Vector Data.")
         if self.VcutData.ecoords!=[]:
-            self.send_data_for_go_scale("Vector_Cut", output_filename)
+            self.send_data("Vector_Cut", False, output_filename)
         else:
             self.statusbar.configure( bg = 'yellow' )
             self.statusMessage.set("No vector data to cut")
@@ -4602,7 +4717,7 @@ class Application(Frame):
                     
                 # End Left Column #
 
-                if self.advanced.get():
+                if self.advanced.get(): 
                    
                     self.PreviewCanvas.configure( width = self.w-240-wadv, height = self.h-50 )
                     self.PreviewCanvas_frame.place(x=220+wadv, y=10)
@@ -4647,6 +4762,12 @@ class Application(Frame):
                         adv_Yloc=adv_Yloc+25
                         self.Label_Rotary_Enable_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
                         self.Checkbutton_Rotary_Enable_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                        
+                        adv_Yloc=adv_Yloc+25
+                        self.Label_Write_In_File.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Write_In_File.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                        
+                        
                     else:
                         #self.Label_Advanced_column.place_forget()
                         #self.separator_adv.place_forget()
@@ -4666,6 +4787,8 @@ class Application(Frame):
                         self.Checkbutton_Inside_First_adv.place_forget()
                         self.Label_Rotary_Enable_adv.place_forget()
                         self.Checkbutton_Rotary_Enable_adv.place_forget()
+                        self.Label_Write_In_File.place_forget()
+                        self.Checkbutton_Write_In_File.place_forget()
 
                     adv_Yloc = BUinit
                     self.Hide_Adv_Button.place (x=Xadvanced, y=adv_Yloc, width=wadv_use, height=30)
@@ -4735,7 +4858,8 @@ class Application(Frame):
                     self.separator_adv3.place_forget()
                     self.Label_Inside_First_adv.place_forget()
                     self.Checkbutton_Inside_First_adv.place_forget()
-
+                    self.Label_Write_In_File.place_forget()
+                    self.Checkbutton_Write_In_File.place_forget()
                     self.Label_Rotary_Enable_adv.place_forget()
                     self.Checkbutton_Rotary_Enable_adv.place_forget()
 
@@ -4760,176 +4884,206 @@ class Application(Frame):
                     self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
                     self.separator_vert.place_forget()
 
+            
+                    
+                    
+                    
+                    
+                    
+                    
+    #####################################                
+                    
+    
+    def Verify_Input_Design_Tool(self):
+        
+        if self.Name.get() != "" :
+            print(self.Name.get())
+            head, tail = os.path.split(self.DESIGN_FILE)
+            print(self.DESIGN_FILE)
+            print(tail)
+                
+        if self.Scale.get() != "" :
+            svg = svgutils.transform.fromfile(self.DESIGN_FILE)
+            originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
+            width = ''
+            height =''
+            if(svg.width.find("p")!=-1):
+                width, a = svg.width.split("p")
+                height, c= svg.height.split("p")
+            elif(svg.width.find("mm")!=-1):
+                width, a, b = svg.width.split("m")
+                height, c, d= svg.height.split("m")
+            else :
+                width = svg.width
+                height = svg.height
 
-                ## AYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-                ## MENU DESIGN TOOL
-                ##
-                ##
-                ##
-                if self.designtool.get():
+            originalSVG.scale(self.Scale.get(), self.Scale.get())
+            figure = svgutils.compose.Figure((float)(width)* (float)(self.Scale.get()), (float)(height)*(float)(self.Scale.get()), originalSVG)
+
+            figure.save(self.DESIGN_FILE)
+            self.menu_Reload_Design()    
+            
+        #check that the value is between 0 and 360
+        if self.Angle.get() != "" :
+            angle_value = float(self.Angle.get()) % 360
+            res = round(angle_value,3)
+            print(res)
+            self.NewAngle = res
+            self.Plot_Data()
+            
+            svg = svgutils.transform.fromfile(self.DESIGN_FILE)
+            originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
+            print("width")
+            print(svg.width)
+            print("height")
+            print(svg.height)
+            width = ''
+            height =''
+            if(svg.width.find("p")!=-1):
+                width, a = svg.width.split("p")
+                height, c= svg.height.split("p")
+            elif(svg.width.find("mm")!=-1):
+                width, a, b = svg.width.split("m")
+                height, c, d= svg.height.split("m")
+            else :
+                width = svg.width
+                height = svg.height
+                
+        
+            if(self.pythagore.get() == True):
+                print('on passe par ici')
+                self.pythagore.set(0)
+                newval = sqrt(((float)(width)**2)+((float)(height)**2))
+                tmpX = (newval/2)-((float)(width)/2)
+                tmpY = (newval/2)-((float)(height)/2)
+                originalSVG.moveto(tmpX,tmpY,1)
+                originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
+                newval = (str)(newval)+"mm"
+                figure = svgutils.compose.Figure(newval, newval, originalSVG)
+                figure.save(self.DESIGN_FILE)
+                self.menu_Reload_Design()
+                
+            else :
+                print('on passe aussi par la ')
+                originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
+                newheight = (str)(width)+"mm"
+                newwidth = (str)(height)+"mm"
+                figure = svgutils.compose.Figure(newwidth, newheight, originalSVG)
+                figure.save(self.DESIGN_FILE)
+                self.menu_Reload_Design()
+            
+        if self.PosX.get() != "" and self.PosY.get() != "":
+            print(self.w)
+            print(self.h)
+            
+            #SCALE : gestion de l'écriture de svg.height qui contient mm à la fin, il faut faire un split dessus
+            #svg = svgutils.transform.fromfile(self.DESIGN_FILE)
+            #originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
+            #originalSVG.scale(2)
+            #figure = svgutils.compose.Figure(float(svg.height) * 2, float(svg.width) * 2, originalSVG)
+            #figure.save(self.DESIGN_FILE)
+            #self.menu_Reload_Design()
+          
+            #print('OUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
+            svg = svgutils.transform.fromfile(self.DESIGN_FILE)
+            originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
+            originalSVG.moveto(self.PosX.get(),self.PosY.get(),1)
+            figure = svgutils.compose.Figure(svg.width, svg.height, originalSVG)
+            figure.save(self.DESIGN_FILE)
+            self.menu_Reload_Design()
+            
+            
+            
+            
+            
+            
+            
+            
+            
+                    
+    def Master_Configure2(self, event, update=0):
+        BUinit = self.h-70
+        Yloc = BUinit
+        if event.widget != self.master:
+            return
+        x = int(self.master.winfo_x())
+        y = int(self.master.winfo_y())
+        w = int(self.master.winfo_width())
+        h = int(self.master.winfo_height())
+        if (self.x, self.y) == (-1,-1):
+            self.x, self.y = x,y
+        if abs(self.w-w)>10 or abs(self.h-h)>10 or update==1:
+            ###################################################
+            #  Form changed Size (resized) adjust as required #
+            ###################################################
+            self.w=w
+            self.h=h
+
+            if True:                
+                # Left Column #
+                size_advanced = 220
+                size_design_tool = 220
+                place_object_in_right_panel_x = self.w-150
+                place_object_in_right_panel_y = 10
+                
+                
+                if (self.designtool.get()): 
+                    if(self.advanced.get()):
+                        print('design tool and advanced setting actived')
+                        self.PreviewCanvas.configure( width = self.w-240-size_advanced-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas_frame.place(x=220+size_advanced, y=10)
+                    else :  
+                        self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas_frame.place(x=220, y=10)
+                       
+                    self.Label_Design_Tool.place(x=place_object_in_right_panel_x,y=place_object_in_right_panel_y)
+                    
+                    self.Hide_Design_Button.place (x=place_object_in_right_panel_x-70, y=Yloc, width=200, height=30)
+                    self.Cancel_Design_Tool.place (x=place_object_in_right_panel_x+35, y=Yloc-35, width=95, height=30)
+                    self.Validate_Design_Tool.place (x=place_object_in_right_panel_x-70, y=Yloc-35, width=95, height=30)
+                    self.Cancel_Design_Tool.configure(bg='light coral')
+                    self.Validate_Design_Tool.configure(bg='green')
+    
+            
+                    self.Label_PosY.place(x=place_object_in_right_panel_x-80, y=Yloc-70, width=110, height=21)
+                    self.Entry_PosY.place(x=place_object_in_right_panel_x+20, y=Yloc-70, width=110, height=23)
+                  
+                    self.Label_PosX.place(x=place_object_in_right_panel_x-80, y=Yloc-100, width=110, height=21)
+                    self.Entry_PosX.place(x=place_object_in_right_panel_x+20, y=Yloc-100, width=110, height=21)
+        
+                    self.Label_Angle.place(x=place_object_in_right_panel_x-80, y=Yloc-130, width=110, height=21)
+                    self.Entry_Angle.place(x=place_object_in_right_panel_x+20, y=Yloc-130, width=110, height=21)
+                    
+                    self.Label_Scale.place(x=place_object_in_right_panel_x-80, y=Yloc-160, width=110, height=21)
+                    self.Entry_Scale.place(x=place_object_in_right_panel_x+20, y=Yloc-160, width=110, height=21)
+                        
+                    self.Label_Name.place(x=place_object_in_right_panel_x-80, y=Yloc-190, width=110, height=21)
+                    self.Entry_Name.place(x=place_object_in_right_panel_x+20, y=Yloc-190, width=110, height=21)
+                        
+                    
+
+                else :
+                    self.Label_Design_Tool.place_forget()
+                    self.Label_PosY.place_forget()     
+                    self.Entry_PosY.place_forget()
+                    self.Label_PosX.place_forget()
+                    self.Entry_PosX.place_forget()
+                    self.Entry_Angle.place_forget()
+                    self.Label_Angle.place_forget()
+                    self.Label_Name.place_forget()
+                    self.Entry_Name.place_forget()
+                    self.Entry_Scale.place_forget()
+                    self.Label_Scale.place_forget()
                    
-                    self.PreviewCanvas.configure( width = self.w-240-wadv, height = self.h-50 )
-                    self.PreviewCanvas_frame.place(x=220+wadv, y=10)
-                    self.separator_vert.place(x=220, y=10,width=2, height=self.h-50)
-
-                    adv_Yloc=25-10 #15
-                    self.Label_Design_Tool_column.place(x=Xadvanced, y=adv_Yloc, width=wadv_use, height=21)
-                    adv_Yloc=adv_Yloc+25
-                    self.separator_adv.place(x=Xadvanced, y=adv_Yloc,width=wadv_use, height=2)
-
-                    if h>=560:
-                        adv_Yloc=adv_Yloc+25-20 #15
-                        self.Label_Halftone_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Halftone_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-                    
-                        adv_Yloc=adv_Yloc+25
-                        self.Label_Negate_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Negate_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-
-                        adv_Yloc=adv_Yloc+25
-                        self.separator_adv2.place(x=Xadvanced, y=adv_Yloc,width=wadv_use, height=2)
-                    
-                        adv_Yloc=adv_Yloc+25-20
-                        self.Label_Mirror_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Mirror_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-
-                        adv_Yloc=adv_Yloc+25
-                        self.Label_Rotate_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Rotate_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-
-                        adv_Yloc=adv_Yloc+25
-                        self.Label_inputCSYS_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_inputCSYS_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-                    
-                        adv_Yloc=adv_Yloc+25
-                        self.separator_adv3.place(x=Xadvanced, y=adv_Yloc,width=wadv_use, height=2)
-
-                        adv_Yloc=adv_Yloc+25-20
-                        self.Label_Inside_First_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Inside_First_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-                    
-                        adv_Yloc=adv_Yloc+25
-                        self.Label_Rotary_Enable_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Rotary_Enable_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-                    else:
-                        #self.Label_Advanced_column.place_forget()
-                        #self.separator_adv.place_forget()
-                        self.Label_Halftone_adv.place_forget()
-                        self.Checkbutton_Halftone_adv.place_forget()
-                        self.Label_Negate_adv.place_forget()
-                        self.Checkbutton_Negate_adv.place_forget()
-                        self.separator_adv2.place_forget()
-                        self.Label_Mirror_adv.place_forget()
-                        self.Checkbutton_Mirror_adv.place_forget()
-                        self.Label_Rotate_adv.place_forget()
-                        self.Checkbutton_Rotate_adv.place_forget()
-                        self.Label_inputCSYS_adv.place_forget()
-                        self.Checkbutton_inputCSYS_adv.place_forget()
-                        self.separator_adv3.place_forget()
-                        self.Label_Inside_First_adv.place_forget()
-                        self.Checkbutton_Inside_First_adv.place_forget()
-                        self.Label_Rotary_Enable_adv.place_forget()
-                        self.Checkbutton_Rotary_Enable_adv.place_forget()
-
-                    adv_Yloc = BUinit
-                    self.Hide_Design_Button.place (x=Xadvanced, y=adv_Yloc, width=wadv_use, height=30)
-                    
-
-                    if self.RengData.image != None:
-                        self.Label_inputCSYS_adv.configure(state="disabled")
-                        self.Checkbutton_inputCSYS_adv.place_forget()              
-                    else:
-                        self.Label_inputCSYS_adv.configure(state="normal")
-                        
-                    if self.GcodeData.ecoords == []:
-                        #adv_Yloc = adv_Yloc-40
-                        self.Label_Vcut_passes.place(x=Xadvanced, y=Y_Vcut, width=w_label_adv, height=21)
-                        self.Entry_Vcut_passes.place(x=Xadvanced+w_label_adv+2, y=Y_Vcut, width=w_entry, height=23)
-
-                        #adv_Yloc=adv_Yloc-30
-                        self.Label_Veng_passes.place(x=Xadvanced, y=Y_Veng, width=w_label_adv, height=21)
-                        self.Entry_Veng_passes.place(x=Xadvanced+w_label_adv+2, y=Y_Veng, width=w_entry, height=23)
-
-                        #adv_Yloc=adv_Yloc-30
-                        self.Label_Reng_passes.place(x=Xadvanced, y=Y_Reng, width=w_label_adv, height=21)
-                        self.Entry_Reng_passes.place(x=Xadvanced+w_label_adv+2, y=Y_Reng, width=w_entry, height=23)
-                        self.Label_Gcde_passes.place_forget()
-                        self.Entry_Gcde_passes.place_forget()
-                        adv_Yloc = Y_Reng
-
-                       ####
-                        adv_Yloc=adv_Yloc-15
-                        self.separator_comb.place(x=Xadvanced-1, y=adv_Yloc, width=wadv_use, height=2)
-
-                        adv_Yloc=adv_Yloc-25
-                        self.Label_Comb_Vector_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Comb_Vector_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-                        
-                        adv_Yloc=adv_Yloc-25
-                        self.Label_Comb_Engrave_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Checkbutton_Comb_Engrave_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
-                        ####
-                        
-                    else:
-                        adv_Yloc=adv_Yloc-40
-                        self.Label_Gcde_passes.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
-                        self.Entry_Gcde_passes.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=w_entry, height=23)
-                        self.Label_Vcut_passes.place_forget()
-                        self.Entry_Vcut_passes.place_forget()
-                        self.Label_Veng_passes.place_forget()
-                        self.Entry_Veng_passes.place_forget()
-                        self.Label_Reng_passes.place_forget()
-                        self.Entry_Reng_passes.place_forget()
-
-                else:
-                    self.PreviewCanvas_frame.place_forget()
-                    self.separator_vert.place_forget()
-                    self.Label_Design_Tool_column.place_forget()
-                    self.separator_adv.place_forget() 
-                    self.Label_Halftone_adv.place_forget()
-                    self.Checkbutton_Halftone_adv.place_forget()
-                    self.Label_Negate_adv.place_forget()
-                    self.Checkbutton_Negate_adv.place_forget()
-                    self.separator_adv2.place_forget()
-                    self.Label_Mirror_adv.place_forget()
-                    self.Checkbutton_Mirror_adv.place_forget()
-                    self.Label_Rotate_adv.place_forget()
-                    self.Checkbutton_Rotate_adv.place_forget()
-                    self.Label_inputCSYS_adv.place_forget()
-                    self.Checkbutton_inputCSYS_adv.place_forget()
-                    self.separator_adv3.place_forget()
-                    self.Label_Inside_First_adv.place_forget()
-                    self.Checkbutton_Inside_First_adv.place_forget()
-
-                    self.Label_Rotary_Enable_adv.place_forget()
-                    self.Checkbutton_Rotary_Enable_adv.place_forget()
-
-                    self.separator_comb.place_forget()
-                    self.Label_Comb_Engrave_adv.place_forget()
-                    self.Checkbutton_Comb_Engrave_adv.place_forget()
-                    self.Label_Comb_Vector_adv.place_forget()
-                    self.Checkbutton_Comb_Vector_adv.place_forget()
-
-
-                    self.Entry_Vcut_passes.place_forget()
-                    self.Label_Vcut_passes.place_forget()
-                    self.Entry_Veng_passes.place_forget()
-                    self.Label_Veng_passes.place_forget()
-                    self.Entry_Reng_passes.place_forget()
-                    self.Label_Reng_passes.place_forget()
-                    self.Label_Gcde_passes.place_forget()
-                    self.Entry_Gcde_passes.place_forget()
+                   
+                    self.Validate_Design_Tool.place_forget()
+                    self.Cancel_Design_Tool.place_forget()
                     self.Hide_Design_Button.place_forget()
                     
-                    self.PreviewCanvas.configure( width = self.w-240, height = self.h-50 )
-                    self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
-                    self.separator_vert.place_forget()
-                ##
-                ##
-                ##
-                ##
-                ##
-                
+                    
+                  
+                    
+ 
                 self.Set_Input_States()
                 
             self.Plot_Data()

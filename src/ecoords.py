@@ -137,6 +137,7 @@ class ECoord:
     def fill_area(self, step_x, step_y, areaMaxX, areaMinY):
         # self.bounds(xmin, xmax, ymin, ymax)
         if len(self.src_ecoords)==0:
+
             return
         yOffset = 0
         loop = 1
