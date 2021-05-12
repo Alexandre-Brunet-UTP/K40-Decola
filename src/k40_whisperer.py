@@ -3581,7 +3581,7 @@ class Application(Frame):
         #xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
         #yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
    
-        svg = svgutils.transform.fromfile(self.DESIGN_FILE)
+        #svg = svgutils.transform.fromfile(self.DESIGN_FILE)
         originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
         figure = svgutils.compose.Figure(self.LaserXsize.get() ,self.LaserYsize.get() , originalSVG)
         figure.save("design.svg")

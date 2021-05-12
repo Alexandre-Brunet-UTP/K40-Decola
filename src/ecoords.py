@@ -181,8 +181,8 @@ class ECoord:
             self.image = Image.new('L',(width,height))
             img = self.image.load()
             src_img = self.src_image.load()
-            for i in range(0,height):                
-                for j in range(0,width):
+            for i in range(self.src_image.getbbox()[1],height):                
+                for j in range(self.src_image.getbbox()[0],width):
                     img[j,i] = src_img[j%img_w,i%img_h] 
                     
             self.image.save("image.png")
