@@ -114,16 +114,19 @@ class EntityList:
     __cacheFlag : bool # True : cache need to be updated
 
     def __init__(self) -> None:
-        self.__entities = []
-        self.__rengData = ECoord()
-        self.__vcutData = ECoord()
-        self.__vengData = ECoord()
-        self.__cacheFlag = False
+        self.clear()
 
     def addEntity(self, entity : Entity) -> None :
         assert (entity != None) 
         self.__entities.append(entity)
         self.__cacheFlag = True
+
+    def clear(self) :
+        self.__entities = []
+        self.__rengData = ECoord()
+        self.__vcutData = ECoord()
+        self.__vengData = ECoord()
+        self.__cacheFlag = False
 
     def getRengData(self) -> ECoord :
         self.__updateCache()
@@ -162,4 +165,6 @@ class EntityList:
             self.__rengData.computeEcoordsLen()
             self.__vengData.computeEcoordsLen()
             self.__vcutData.computeEcoordsLen()
+        
+            self.__cacheFlag = False
     
