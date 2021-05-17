@@ -16,6 +16,7 @@
 
 """
 from math import *
+from __future__ import annotations
 
 class ECoord:
     def __init__(self):
@@ -178,4 +179,26 @@ class ECoord:
         return loop
 
 
+    def addEcoord(self, newEcoord : ECoord) -> None :
+        if newEcoord == None :
+            return
 
+        loop = 0 
+        ecoordSize = len(self.ecoords)
+        if(ecoordSize != 0) :
+            loop = self.ecoords[ecoordSize-1][2] + 1
+
+        for i in range(0, len(newEcoord.ecoords)) :
+            data = newEcoord.ecoords[i]
+            newData = [data[0], data[1], data[2]+loop]
+
+            if newData[0] < self.bounds[0] :
+                self.bounds[0] = newData[0]
+            if newData[0] > self.bounds[1] :
+                self.bounds[1] = newData[0]
+            if newData[1] < self.bounds[2] :
+                self.bounds[2] = newData[1]
+            if newData[1] > self.bounds[3] :
+                self.bounds[3] = newData[1]
+
+            self.ecoords.append(newData)
