@@ -1,6 +1,6 @@
+from __future__ import annotations # Anotations pour le Entity -> return Entity
 from tkinter.constants import NO, SEL
 from ecoords import ECoord
-from __future__ import annotations # Anotations pour le Entity -> return Entity
 import copy
 
 
@@ -52,20 +52,20 @@ class Entity:
     def resetTransform(self) -> None :
         self.__bounds = AABB(0, 0, 0, 0)
 
-        if(self.rengData != None) :
+        if(self.__rengData != None) :
             self.__bounds = AABB(self.__rengData.bounds[0], self.__rengData.bounds[1], self.__rengData.bounds[2], self.__rengData.bounds[3])
-        if(self.vengData != None) :
+        if(self.__vengData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, self.__vengData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, self.__vengData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, self.__vengData.bounds[2])
-            self.__bounds.tmax = max(self.__bounds.ymax, self.__vengData.bounds[3])
-        if(self.vcutData != None) :
+            self.__bounds.ymax = max(self.__bounds.ymax, self.__vengData.bounds[3])
+        if(self.__vcutData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, self.__vcutData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, self.__vcutData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, self.__vcutData.bounds[2])
-            self.__bounds.tmax = max(self.__bounds.ymax, self.__vcutData.bounds[3])
+            self.__bounds.ymax = max(self.__bounds.ymax, self.__vcutData.bounds[3])
 
-        self.__pos = self.bounds.getCenter()
+        self.__pos = self.__bounds.getCenter()
         self.__angle = 0
         self.__scale = (1, 1)
 
@@ -130,15 +130,15 @@ class EntityList:
 
     def getRengData(self) -> ECoord :
         self.__updateCache()
-        return self.__rengData
+        return copy.deepcopy(self.__rengData)
 
     def getVengData(self) -> ECoord :
         self.__updateCache()
-        return self.__vengData
+        return copy.deepcopy(self.__vengData)
 
     def getVcutData(self) -> ECoord :
         self.__updateCache()
-        return self.__vcutData
+        return copy.deepcopy(self.__vcutData)
 
     def __updateCacheFlag(self) -> None :
         if(self.__cacheFlag != True) : 
