@@ -50,6 +50,7 @@ import cubicsuperpath
 import cspsubdiv
 import traceback
 import struct
+from entity import *
 import svgutils
 from svgutils.compose import *
 
@@ -122,9 +123,6 @@ QUIET = False
    
 ################################################################################
 class Application(Frame):
-
-    entities : EntityList 
-
     def __init__(self, master):
         self.trace_window = toplevel_dummy()
         Frame.__init__(self, master)
@@ -140,7 +138,6 @@ class Application(Frame):
         self.menu_View_Refresh()
 
     def resetPath(self):
-        self.entities.clear()
         self.RengData  = ECoord()
         self.VengData  = ECoord()
         self.VcutData  = ECoord()
@@ -2283,6 +2280,7 @@ class Application(Frame):
             message_box("Warning", line1+line2+line3+line4)
 
     def Append_SVG(self,filemname):
+        self.resetPath()
                
         self.SVG_FILE = filemname
         svg_reader =  SVG_READER()
@@ -2336,7 +2334,6 @@ class Application(Frame):
             self.statusMessage.set("Unable To open SVG File: %s" %(filemname))
             debug_message(traceback.format_exc())
             return
-
         xmax = svg_reader.Xsize/25.4
         ymax = svg_reader.Ysize/25.4
         xmin = 0
@@ -2371,14 +2368,6 @@ class Application(Frame):
             self.wim, self.him = self.RengData.image.size
             self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
             #self.make_raster_coords()
-
-        entity = Entity(self.RengData, self.VengData, self.VcutData)
-        self.entities.addEntity(entity)
-
-        self.VcutData = self.entities.getVcutData()
-        self.VengData = self.entities.getVengData()
-        self.RengData = self.entities.getRengData()
-
         self.refreshTime()
         margin=0.0625 # A bit of margin to prevent the warningwindow for designs that are close to being within the bounds
         if self.Design_bounds[0] > self.VengData.bounds[0]+margin or\

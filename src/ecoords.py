@@ -193,20 +193,13 @@ class ECoord:
             data = newEcoord.ecoords[i]
             newData = [data[0], data[1], data[2]+loop]
 
-            bounds = list(self.bounds)
-            if newData[0] < bounds[0] :
-                bounds[0] = newData[0]
-            if newData[0] > bounds[1] :
-                bounds[1] = newData[0]
-            if newData[1] < bounds[2] :
-                bounds[2] = newData[1]
-            if newData[1] > bounds[3] :
-                bounds[3] = newData[1]
+            if newData[0] < self.bounds[0] :
+                self.bounds[0] = newData[0]
+            if newData[0] > self.bounds[1] :
+                self.bounds[1] = newData[0]
+            if newData[1] < self.bounds[2] :
+                self.bounds[2] = newData[1]
+            if newData[1] > self.bounds[3] :
+                self.bounds[3] = newData[1]
 
-            self.bounds = (bounds[0], bounds[1], bounds[2], bounds[3])
             self.ecoords.append(newData)
-
-        # TO UPDATE
-        # The picture must be merged and not replaced
-        if(newEcoord.image != None):
-            self.image = newEcoord.image
