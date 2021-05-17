@@ -53,6 +53,7 @@ import struct
 from entity import *
 import svgutils
 from svgutils.compose import *
+from DesignToolPanel import DesignToolPanel
 
 DEBUG = False
 if DEBUG:
@@ -125,6 +126,7 @@ QUIET = False
 class Application(Frame):
     def __init__(self, master):
         self.trace_window = toplevel_dummy()
+        self.designToolPanel = DesignToolPanel(master, self.Hide_Design_Tool)
         Frame.__init__(self, master)
         self.w = 780
         self.h = 490
@@ -275,18 +277,6 @@ class Application(Frame):
         self.rast_step  = StringVar()
         self.funits     = StringVar()
         
-        self.Name       = StringVar()
-        self.Angle      = StringVar()
-        self.PosX       = StringVar()
-        self.PosY       = StringVar()
-        self.NewName    = StringVar()
-        self.NewAngle      = StringVar()
-        self.NewPosX       = StringVar()
-        self.NewPosY       = StringVar()
-        self.optimization_for_filling = bool()
-        self.Scale=StringVar()
-        
-
         self.bezier_M1     = StringVar()
         self.bezier_M2     = StringVar()
         self.bezier_weight = StringVar()
@@ -636,48 +626,7 @@ class Application(Frame):
 
         # Gestion de l'angle et de la psoition du dessin en X et Y
         self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
-        
-        self.Label_Name = Label(self.master,text="Name")
-        self.Entry_Name   = Entry(self.master,width="15")
-        self.Entry_Name.configure(textvariable=self.Name,justify='center',fg="black")
-        self.Name.trace_variable("w", self.Entry_Reng_passes_Callback)
-        self.NormalColor =  self.Entry_Name.cget('bg')
-        
-        self.Label_Scale = Label(self.master,text="Scale")
-        self.Entry_Scale = Entry(self.master,width="15")
-        self.Entry_Scale.configure(textvariable=self.Scale,justify='center',fg="black")
-        self.Scale.trace_variable("w", self.Entry_Reng_passes_Callback)
-        self.NormalColor =  self.Entry_Scale.cget('bg')
-        
-        self.Label_Angle = Label(self.master,text="Angle")
-        self.Entry_Angle   = Entry(self.master,width="15")
-        self.Entry_Angle.configure(textvariable=self.Angle,justify='center',fg="black")
-        self.Angle.trace_variable("w", self.Entry_Reng_passes_Callback)
-        self.NormalColor =  self.Entry_Angle.cget('bg')
-
-        self.Label_PosX = Label(self.master,text="Position X")
-        self.Entry_PosX   = Entry(self.master,width="15")
-        self.Entry_PosX.configure(textvariable=self.PosX,justify='center',fg="black")
-        self.PosX.trace_variable("w", self.Entry_Veng_passes_Callback)
-        self.NormalColor =  self.Entry_PosX.cget('bg')
-
-        self.Label_PosY = Label(self.master,text="Position Y")
-        self.Entry_PosY   = Entry(self.master,width="15")
-        self.Entry_PosY.configure(textvariable=self.PosY,justify='center',fg="black")
-        self.PosY.trace_variable("w", self.Entry_Vcut_passes_Callback)
-        self.NormalColor =  self.Entry_PosY.cget('bg')
-        
-        self.Validate_Design_Tool = Button(self.master,text="Validate", command=self.Verify_Input_Design_Tool)
-        self.Cancel_Design_Tool = Button(self.master,text="Cancel", command=self.Hide_Design_Tool)
-        #cacher le menu vertical de Design tool settings
-        self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
-
-
-
-
-
-
-
+     
         # Advanced Column     #
         self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         self.Label_Advanced_column = Label(self.master,text="Advanced Settings",anchor=CENTER)
@@ -1954,10 +1903,7 @@ class Application(Frame):
 
             print('Check button unchecked')
             self.Open_with_filling_without_optimization()
-        
-    def affiche(self):
-        print(self.optimization_for_filling)
-        
+         
         
     def menu_File_Open_File_with_Filling(self):
         windo_width = 350
@@ -5019,11 +4965,7 @@ class Application(Frame):
                     
                     self.PreviewCanvas.configure( width = self.w-240, height = self.h-50 )
                     self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
-                    self.separator_vert.place_forget()
-
-            
-                    
-                    
+                    self.separator_vert.place_forget()           
                     
                     
                     
@@ -5164,8 +5106,12 @@ class Application(Frame):
                 place_object_in_right_panel_y = 10
                 
                 
-                if (self.designtool.get()): 
-                    if(self.advanced.get()):
+                #if (self.designtool.get()): 
+                self.designToolPanel.setVisible(self.designtool.get())
+                self.designToolPanel.updateUI(w, h)
+                
+                if self.designtool.get() :
+                    if self.advanced.get():
                         print('design tool and advanced setting actived')
                         self.PreviewCanvas.configure( width = self.w-240-size_advanced-size_design_tool, height = self.h-50 )
                         self.PreviewCanvas_frame.place(x=220+size_advanced, y=10)
@@ -5173,54 +5119,6 @@ class Application(Frame):
                         self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50 )
                         self.PreviewCanvas_frame.place(x=220, y=10)
                        
-                    self.Label_Design_Tool.place(x=place_object_in_right_panel_x,y=place_object_in_right_panel_y)
-                    
-                    self.Hide_Design_Button.place (x=place_object_in_right_panel_x-70, y=Yloc, width=200, height=30)
-                    self.Cancel_Design_Tool.place (x=place_object_in_right_panel_x+35, y=Yloc-35, width=95, height=30)
-                    self.Validate_Design_Tool.place (x=place_object_in_right_panel_x-70, y=Yloc-35, width=95, height=30)
-                    self.Cancel_Design_Tool.configure(bg='light coral')
-                    self.Validate_Design_Tool.configure(bg='green')
-    
-            
-                    self.Label_PosY.place(x=place_object_in_right_panel_x-80, y=Yloc-70, width=110, height=21)
-                    self.Entry_PosY.place(x=place_object_in_right_panel_x+20, y=Yloc-70, width=110, height=23)
-                  
-                    self.Label_PosX.place(x=place_object_in_right_panel_x-80, y=Yloc-100, width=110, height=21)
-                    self.Entry_PosX.place(x=place_object_in_right_panel_x+20, y=Yloc-100, width=110, height=21)
-        
-                    self.Label_Angle.place(x=place_object_in_right_panel_x-80, y=Yloc-130, width=110, height=21)
-                    self.Entry_Angle.place(x=place_object_in_right_panel_x+20, y=Yloc-130, width=110, height=21)
-                    
-                    self.Label_Scale.place(x=place_object_in_right_panel_x-80, y=Yloc-160, width=110, height=21)
-                    self.Entry_Scale.place(x=place_object_in_right_panel_x+20, y=Yloc-160, width=110, height=21)
-                        
-                    self.Label_Name.place(x=place_object_in_right_panel_x-80, y=Yloc-190, width=110, height=21)
-                    self.Entry_Name.place(x=place_object_in_right_panel_x+20, y=Yloc-190, width=110, height=21)
-                        
-                    
-
-                else :
-                    self.Label_Design_Tool.place_forget()
-                    self.Label_PosY.place_forget()     
-                    self.Entry_PosY.place_forget()
-                    self.Label_PosX.place_forget()
-                    self.Entry_PosX.place_forget()
-                    self.Entry_Angle.place_forget()
-                    self.Label_Angle.place_forget()
-                    self.Label_Name.place_forget()
-                    self.Entry_Name.place_forget()
-                    self.Entry_Scale.place_forget()
-                    self.Label_Scale.place_forget()
-                   
-                   
-                    self.Validate_Design_Tool.place_forget()
-                    self.Cancel_Design_Tool.place_forget()
-                    self.Hide_Design_Button.place_forget()
-                    
-                    
-                  
-                    
- 
                 self.Set_Input_States()
                 
             self.Plot_Data()
