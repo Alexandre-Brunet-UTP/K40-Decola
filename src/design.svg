@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='ASCII' standalone='yes'?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800.0px" viewBox="0 0 800.0 600.0" height="600.0px">
   <g>
-    <g><g>
     <g><defs id="defs2"/>
   <sodipodi:namedview xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="base" pagecolor="#ffffff" bordercolor="#666666" borderopacity="1.0" inkscape:pageopacity="0.0" inkscape:pageshadow="2" inkscape:zoom="0.35" inkscape:cx="400" inkscape:cy="560" inkscape:document-units="mm" inkscape:current-layer="layer1" inkscape:document-rotation="0" showgrid="false" inkscape:window-width="1540" inkscape:window-height="860" inkscape:window-x="44" inkscape:window-y="0" inkscape:window-maximized="0"/>
   <metadata xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" id="metadata5">
@@ -17,8 +16,6 @@
     <rect style="fill:#000000;stroke:#0000ff;stroke-width:0.264583" id="rect833" width="103.56547" height="55.184521" x="24.190477" y="35.529762"/>
     <rect style="fill:none;stroke:#0000ff;stroke-width:0.264583;opacity:0.0130719" id="rect835" width="117.17262" height="82.398804" x="45.357143" y="125.48809"/>
     <rect style="opacity:0.0130719;fill:none;stroke:#0000ff;stroke-width:0.264583" id="rect837" width="87.690468" height="84.666672" x="45.357143" y="125.48809"/>
-  </g>
-</g>
   </g>
 </g>
   </g>

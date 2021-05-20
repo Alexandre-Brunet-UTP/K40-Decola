@@ -167,7 +167,7 @@ class ECoord:
                 yOffset -= step_y
     
             self.ecoords = newEcoords
-            self.computeEcoordsLen()
+            self.computeEcoordsLen()       
             
         if self.src_image != None :
             print("processing Raster filling (it may take a while)")
@@ -181,10 +181,21 @@ class ECoord:
             self.image = Image.new('L',(width,height))
             img = self.image.load()
             src_img = self.src_image.load()
-            for i in range(self.src_image.getbbox()[1],height):                
-                for j in range(self.src_image.getbbox()[0],width):
+            for i in range(0,height):                
+                for j in range(0,width):
                     img[j,i] = src_img[j%img_w,i%img_h] 
-                    
+            
+            #        
+            #(x1,y1,x2,y2) = self.image.getbbox()
+            #(xmin,xmax,ymin,ymax) = self.bounds
+            
+            #xmax=max(xmax,x1,x2)
+            #ymax=max(ymax,y1,y2)
+            #xmin=min(xmin,x1,x2)
+            #ymin=min(ymin,y1,y2)
+            #self.bounds = (xmin,xmax,ymin,ymax)
+            #        
+            
             self.image.save("image.png")
             print("Raster filling complete")
         

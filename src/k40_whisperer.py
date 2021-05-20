@@ -2844,6 +2844,16 @@ class Application(Frame):
             self.statusbar.configure( bg = 'white' )
         
     def Get_Design_Bounds(self):
+        
+        #
+        #xmin = min(self.VcutData.bounds[0],self.VengData.bounds[0],self.RengData.bounds[0])
+        #xmax = max(self.VcutData.bounds[1],self.VengData.bounds[1],self.RengData.bounds[1])
+        #ymin = min(self.VcutData.bounds[2],self.VengData.bounds[2],self.RengData.bounds[2])
+        #ymax = max(self.VcutData.bounds[3],self.VengData.bounds[3],self.RengData.bounds[3])
+                
+        #self.Design_bounds = (xmin,xmax,ymin,ymax)
+        #
+        
         if self.rotate.get():
             ymin =  self.Design_bounds[0]
             ymax =  self.Design_bounds[1]
@@ -3603,6 +3613,8 @@ class Application(Frame):
         self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.RengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        
+        
         self.menu_View_Refresh()
         
     
