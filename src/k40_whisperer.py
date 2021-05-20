@@ -5129,6 +5129,13 @@ class Application(Frame):
                     else :  
                         self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50)
                         self.PreviewCanvas_frame.place(x=220, y=10)
+                else :
+                    if self.advanced.get() :
+                        self.PreviewCanvas.configure( width = self.w-240-size_advanced, height = self.h-50)
+                        self.PreviewCanvas_frame.place(x=220+size_advanced, y=10)
+                    else :
+                        self.PreviewCanvas.configure( width = self.w-240, height = self.h-50)
+                        self.PreviewCanvas_frame.place(x=220, y=10)
                        
                 self.Set_Input_States()
                 
