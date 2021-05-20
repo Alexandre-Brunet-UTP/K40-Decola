@@ -126,7 +126,8 @@ QUIET = False
 class Application(Frame):
     def __init__(self, master):
         self.trace_window = toplevel_dummy()
-        self.designToolPanel = DesignToolPanel(master, self.Hide_Design_Tool)
+        self.entities = EntityList()
+        self.designToolPanel = DesignToolPanel(master, self.entities, self.Hide_Design_Tool, self.menu_View_Refresh, self.__updateEcoords)
         Frame.__init__(self, master)
         self.w = 780
         self.h = 490
@@ -136,7 +137,6 @@ class Application(Frame):
         self.y = -1
         self.createWidgets()
         self.micro = False
-        self.entities = EntityList()
         self.menu_View_Refresh()
 
     def resetPath(self):
@@ -161,7 +161,7 @@ class Application(Frame):
         self.k40 = None
         self.run_time = 0
         
-        self.master.bind("<Configure>", self.Master_Configure)
+        self.master.bind("<Configure>", self.Master_Configure2)
         self.master.bind('<Enter>', self.bindConfigure)
         self.master.bind('<F1>', self.KEY_F1)
         self.master.bind('<F2>', self.KEY_F2)
@@ -871,6 +871,12 @@ class Application(Frame):
         ##########################################################################
 
 ################################################################################
+    def __updateEcoords(self) -> None :
+        self.VengData = self.entities.getVengData()
+        self.RengData = self.entities.getRengData()
+        self.VcutgData = self.entities.getVcutData()
+
+
     def entry_set(self, val2, calc_flag=0, new=0):
         if calc_flag == 0 and new==0:
             try:
@@ -2309,6 +2315,12 @@ class Application(Frame):
         ###   Load Image       ###
         ##########################
         self.RengData.set_image(svg_reader.raster_PIL)
+
+        entity = Entity(self.RengData, self.VengData, self.VcutData)
+        self.entities.addEntity(entity)
+        self.RengData = self.entities.getRengData()
+        self.VcutData = self.entities.getVcutData()
+        self.VengData = self.entities.getVengData()
         
         if (self.RengData.image != None):
             self.wim, self.him = self.RengData.image.size
@@ -5106,17 +5118,16 @@ class Application(Frame):
                 place_object_in_right_panel_y = 10
                 
                 
-                #if (self.designtool.get()): 
                 self.designToolPanel.setVisible(self.designtool.get())
                 self.designToolPanel.updateUI(w, h)
-                
+
                 if self.designtool.get() :
                     if self.advanced.get():
                         print('design tool and advanced setting actived')
-                        self.PreviewCanvas.configure( width = self.w-240-size_advanced-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas.configure( width = self.w-240-size_advanced-size_design_tool, height = self.h-50)
                         self.PreviewCanvas_frame.place(x=220+size_advanced, y=10)
                     else :  
-                        self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50)
                         self.PreviewCanvas_frame.place(x=220, y=10)
                        
                 self.Set_Input_States()

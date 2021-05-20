@@ -40,6 +40,7 @@ class Entity:
     __pos : tuple[float, float] # La position de l'objet en pouces
     __angle : float # La rotation de l'objet en degré
     __scale : tuple[float, float] # L'échelle de l'objet
+    __updateFlag : bool
 
     def __init__(self, reng : ECoord, veng : ECoord, vcut : ECoord) -> None:
         self.__rengData = reng
@@ -50,22 +51,23 @@ class Entity:
         self.resetTransform()
 
     def resetTransform(self) -> None :
+        self.__updateFlag = True
         self.__bounds = AABB(0, 0, 0, 0)
 
-        if(self.rengData != None) :
+        if(self.__rengData != None) :
             self.__bounds = AABB(self.__rengData.bounds[0], self.__rengData.bounds[1], self.__rengData.bounds[2], self.__rengData.bounds[3])
-        if(self.vengData != None) :
+        if(self.__vengData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, self.__vengData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, self.__vengData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, self.__vengData.bounds[2])
-            self.__bounds.tmax = max(self.__bounds.ymax, self.__vengData.bounds[3])
-        if(self.vcutData != None) :
+            self.__bounds.ymax = max(self.__bounds.ymax, self.__vengData.bounds[3])
+        if(self.__vcutData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, self.__vcutData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, self.__vcutData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, self.__vcutData.bounds[2])
-            self.__bounds.tmax = max(self.__bounds.ymax, self.__vcutData.bounds[3])
+            self.__bounds.ymax = max(self.__bounds.ymax, self.__vcutData.bounds[3])
 
-        self.__pos = self.bounds.getCenter()
+        self.__pos = self.__bounds.getCenter()
         self.__angle = 0
         self.__scale = (1, 1)
 
@@ -73,8 +75,12 @@ class Entity:
         self.__transformedVengData = None
         self.__transformedVcutData = None
 
-    def isCached(self) -> bool :
-        return True
+
+    def resetCacheFlag(self) -> None : 
+        self.__updateFlag = False
+
+    def getUpdateFlag(self) -> bool :
+        return self.__updateFlag
 
     def clone(self) -> Entity :
         return copy.deepcopy(self)
@@ -95,6 +101,56 @@ class Entity:
         assert isinstance(name, str)
         assert str != None
         self.__name = name
+        
+    # x and y in inches
+    def setPos(self, x : float, y : float) -> None :
+        if x == self.__pos[0] and y == self.__pos[1] : 
+            return
+        
+        dx = x - self.__pos[0]
+        dy = y - self.__pos[1]
+        print("dx=" + str(dx) + ", dy=" + str(dy))
+        
+        self.__updateFlag = True
+        self.__setTransformedIfEmpty()
+        self.__pos = [x, y]
+        self.__transformedRengData.moveFnc(dx, dy)
+        self.__transformedVengData.moveFnc(dx, dy)
+        self.__transformedVcutData.moveFnc(dx, dy)
+        self.__updateBounds()
+        
+    def getPos(self) -> None : 
+        return copy.deepcopy(self.__pos)
+
+    def __updateBounds(self) -> None :
+        rengData = self.getRengData()
+        vengData = self.getVengData()
+        vcutData = self.getVcutData()
+        
+        if(rengData != None) :
+            self.__bounds = AABB(rengData.bounds[0], rengData.bounds[1], rengData.bounds[2], rengData.bounds[3])
+        if(vengData != None) :
+            self.__bounds.xmin = min(self.__bounds.xmin, vengData.bounds[0])
+            self.__bounds.xmax = max(self.__bounds.xmax, vengData.bounds[1])
+            self.__bounds.ymin = min(self.__bounds.ymin, vengData.bounds[2])
+            self.__bounds.ymax = max(self.__bounds.ymax, vengData.bounds[3])
+        if(vcutData != None) :
+            self.__bounds.xmin = min(self.__bounds.xmin, vcutData.bounds[0])
+            self.__bounds.xmax = max(self.__bounds.xmax, vcutData.bounds[1])
+            self.__bounds.ymin = min(self.__bounds.ymin, vcutData.bounds[2])
+            self.__bounds.ymax = max(self.__bounds.ymax, vcutData.bounds[3])
+
+    def __setTransformedIfEmpty(self) -> None :
+        if(self.__transformedRengData == None) : 
+            self.__transformedRengData = copy.deepcopy(self.__rengData)
+            
+        if(self.__transformedVengData == None) : 
+            self.__transformedVengData = copy.deepcopy(self.__vengData)
+            
+        if(self.__transformedVcutData == None) : 
+            self.__transformedVcutData = copy.deepcopy(self.__vcutData)
+                        
+        
    # def move(self, x : float, y : float) -> None:
     #    self.pos[0] += x
     #    self.pos[1] += y
@@ -121,6 +177,9 @@ class EntityList:
         self.__entities.append(entity)
         self.__cacheFlag = True
 
+    def getEntities(self) -> list(Entity) :
+        return self.__entities
+
     def clear(self) :
         self.__entities = []
         self.__rengData = ECoord()
@@ -143,7 +202,7 @@ class EntityList:
     def __updateCacheFlag(self) -> None :
         if(self.__cacheFlag != True) : 
             for entity in self.__entities :
-                if not entity.isCached() :
+                if entity.getUpdateFlag() :
                     self.__cacheFlag = True
                     break
 
@@ -161,6 +220,7 @@ class EntityList:
                 self.__rengData.addEcoord(entity.getRengData())
                 self.__vengData.addEcoord(entity.getVengData())
                 self.__vcutData.addEcoord(entity.getVcutData())
+                entity.resetCacheFlag()
             
             self.__rengData.computeEcoordsLen()
             self.__vengData.computeEcoordsLen()

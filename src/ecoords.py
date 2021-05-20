@@ -17,6 +17,7 @@
 """
 from __future__ import annotations
 from math import *
+from tkinter.constants import NO
 
 class ECoord:
     def __init__(self):
@@ -184,6 +185,9 @@ class ECoord:
         if newEcoord == None :
             return
 
+        if(newEcoord.image != None) :
+            self.image = newEcoord.image
+
         loop = 0 
         ecoordSize = len(self.ecoords)
         if(ecoordSize != 0) :
@@ -193,13 +197,19 @@ class ECoord:
             data = newEcoord.ecoords[i]
             newData = [data[0], data[1], data[2]+loop]
 
-            if newData[0] < self.bounds[0] :
-                self.bounds[0] = newData[0]
-            if newData[0] > self.bounds[1] :
-                self.bounds[1] = newData[0]
-            if newData[1] < self.bounds[2] :
-                self.bounds[2] = newData[1]
-            if newData[1] > self.bounds[3] :
-                self.bounds[3] = newData[1]
-
             self.ecoords.append(newData)
+            self.bounds = (min(newData[0], self.bounds[0]), max(newData[0], self.bounds[1]), min(newData[1], self.bounds[2]), max(newData[1], self.bounds[3]))
+        ## don't compute len to save time
+        # must be called externaly 
+        
+       
+    def moveFnc(self, x : float, y : float) -> None :
+        ecoordSize = len(self.ecoords)
+        for i in range(0, ecoordSize) : 
+            self.ecoords[i][0] += x
+            self.ecoords[i][1] += y
+                
+        self.computeEcoordsLen()
+                
+            
+            
