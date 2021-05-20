@@ -282,6 +282,7 @@ class Application(Frame):
         self.NewPosX       = StringVar()
         self.NewPosY       = StringVar()
         self.optimization_for_filling = bool()
+        self.Scale=StringVar()
         
 
         self.bezier_M1     = StringVar()
@@ -315,6 +316,7 @@ class Application(Frame):
         self.batch_path    = StringVar()
         self.ink_timeout   = StringVar()
         self.check = BooleanVar()
+        self.Write_In_File= BooleanVar()
     
         
         self.t_timeout  = StringVar()
@@ -363,6 +365,7 @@ class Application(Frame):
         self.pre_pr_crc.set(1)
         self.inside_first.set(1)
         self.rotary.set(0)
+        self.Write_In_File.set(1)
         
         self.ht_size.set(500)
 
@@ -622,7 +625,7 @@ class Application(Frame):
 
         # Design Tool Settings Column    #
         self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
-        self.Label_Design_Tool_column = Label(self.master,text="Design Tool Settings",anchor=CENTER)
+        self.Label_Design_Tool = Label(self.master,text="Design Tool Settings",anchor=CENTER)
         self.separator_adv = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
 
 
@@ -638,6 +641,13 @@ class Application(Frame):
         self.Name.trace_variable("w", self.Entry_Reng_passes_Callback)
         self.NormalColor =  self.Entry_Name.cget('bg')
         
+        self.Label_Scale = Label(self.master,text="Scale")
+        self.Entry_Scale = Entry(self.master,width="15")
+        self.Entry_Scale.configure(textvariable=self.Scale,justify='center',fg="black")
+        self.Scale.trace_variable("w", self.Entry_Reng_passes_Callback)
+        self.NormalColor =  self.Entry_Scale.cget('bg')
+        
+
         self.Label_Angle = Label(self.master,text="Angle")
         self.Entry_Angle   = Entry(self.master,width="15")
         self.Entry_Angle.configure(textvariable=self.Angle,justify='center',fg="black")
@@ -714,6 +724,11 @@ class Application(Frame):
         self.Checkbutton_Rotary_Enable_adv = Checkbutton(self.master,text="")
         self.Checkbutton_Rotary_Enable_adv.configure(variable=self.rotary)
         self.rotary.trace_variable("w", self.Reset_RasterPath_and_Update_Time)
+
+        self.Label_Write_In_File = Label(self.master,text="Write in file")
+        self.Checkbutton_Write_In_File = Checkbutton(self.master,text="")
+        self.Checkbutton_Write_In_File.configure(variable=self.Write_In_File)
+
 
 
         #####
@@ -3593,10 +3608,12 @@ class Application(Frame):
   
    
     def send_data(self,operation_type=None, laseron = True, output_filename = None):
-        if laseron == True :
-            output_filename = "lhymicro_output.txt"
-        else:
-            output_filename = "lhymicro_output_go_scale.txt"
+
+        if self.Write_In_File.get() == 1 : 
+            if laseron == True :
+                output_filename = "lhymicro_output.txt"
+            else:
+                output_filename = "lhymicro_output_go_scale.txt"
 
         num_passes=0
         if self.k40 == None and output_filename == None:
@@ -4191,7 +4208,7 @@ class Application(Frame):
             self.master.update()
             
             if output_filename != None:
-                self.write_egv_to_file(data,output_filename)
+                self.write_egv_to_file(data,True, output_filename)
             else:
                 self.send_egv_data(data, 1, output_filename)
                 self.menu_View_Refresh()
@@ -4233,26 +4250,6 @@ class Application(Frame):
         
     ##########################################################################
     ##########################################################################
-    def write_egv_to_file(self,data,fname):
-        if len(data) == 0:
-            raise Exception("No data available to write to file.")
-        try:
-            fout = open(fname,'w')
-        except:
-            raise Exception("Unable to open file ( %s ) for writing." %(fname))
-        fout.write("Document type : LHYMICRO-GL file\n")
-        fout.write("Creator-Software: K40 Whisperer\n")
-        
-        fout.write("\n")
-        fout.write("%0%0%0%0%")
-        for char_val in data:
-            char = chr(char_val)
-            fout.write("%s" %(char))
-            
-        #fout.write("\n")
-        fout.close
-        self.menu_View_Refresh()
-        self.statusMessage.set("Data saved to: %s" %(fname))
         
     def Home(self, event=None):
         if self.GUI_Disabled:
@@ -4767,6 +4764,12 @@ class Application(Frame):
                         adv_Yloc=adv_Yloc+25
                         self.Label_Rotary_Enable_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
                         self.Checkbutton_Rotary_Enable_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                        
+                        adv_Yloc=adv_Yloc+25
+                        self.Label_Write_In_File.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Write_In_File.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                        
+                        
                     else:
                         #self.Label_Advanced_column.place_forget()
                         #self.separator_adv.place_forget()
@@ -4786,6 +4789,8 @@ class Application(Frame):
                         self.Checkbutton_Inside_First_adv.place_forget()
                         self.Label_Rotary_Enable_adv.place_forget()
                         self.Checkbutton_Rotary_Enable_adv.place_forget()
+                        self.Label_Write_In_File.place_forget()
+                        self.Checkbutton_Write_In_File.place_forget()
 
                     adv_Yloc = BUinit
                     self.Hide_Adv_Button.place (x=Xadvanced, y=adv_Yloc, width=wadv_use, height=30)
@@ -4855,7 +4860,8 @@ class Application(Frame):
                     self.separator_adv3.place_forget()
                     self.Label_Inside_First_adv.place_forget()
                     self.Checkbutton_Inside_First_adv.place_forget()
-
+                    self.Label_Write_In_File.place_forget()
+                    self.Checkbutton_Write_In_File.place_forget()
                     self.Label_Rotary_Enable_adv.place_forget()
                     self.Checkbutton_Rotary_Enable_adv.place_forget()
 
@@ -4879,14 +4885,62 @@ class Application(Frame):
                     self.PreviewCanvas.configure( width = self.w-240, height = self.h-50 )
                     self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
                     self.separator_vert.place_forget()
+      
+                    
+                    
+                    
+                    
+    #####################################                
+                        
+                    
+    def Master_Configure2(self, event, update=0):
+        BUinit = self.h-70
+        Yloc = BUinit
+        if event.widget != self.master:
+            return
+        x = int(self.master.winfo_x())
+        y = int(self.master.winfo_y())
+        w = int(self.master.winfo_width())
+        h = int(self.master.winfo_height())
+        if (self.x, self.y) == (-1,-1):
+            self.x, self.y = x,y
+        if abs(self.w-w)>10 or abs(self.h-h)>10 or update==1:
+            ###################################################
+            #  Form changed Size (resized) adjust as required #
+            ###################################################
+            self.w=w
+            self.h=h
 
-            
+            if True:                
+                # Left Column #
+                size_advanced = 220
+                size_design_tool = 220
+                place_object_in_right_panel_x = self.w-150
+                place_object_in_right_panel_y = 10
+                
+                
+                if (self.designtool.get()): 
+                    if(self.advanced.get()):
+                        print('design tool and advanced setting actived')
+                        self.PreviewCanvas.configure( width = self.w-240-size_advanced-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas_frame.place(x=220+size_advanced, y=10)
+                    else :  
+                        self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas_frame.place(x=220, y=10)
+                   
+                            
+                    self.Label_Design_Tool.place(x=place_object_in_right_panel_x,y=place_object_in_right_panel_y)
+                    self.separator_adv10.place(x=place_object_in_right_panel_x-80, y=place_object_in_right_panel_y+30,width=220, height=2)
+                    
+                    self.Hide_Design_Button.place (x=place_object_in_right_panel_x-70, y=Yloc, width=200, height=30)
+                    self.Cancel_Design_Tool.place (x=place_object_in_right_panel_x+35, y=Yloc-35, width=95, height=30)
+                    self.Validate_Design_Tool.place (x=place_object_in_right_panel_x-70, y=Yloc-35, width=95, height=30)
+                    self.Cancel_Design_Tool.configure(bg='light coral')
+                    self.Validate_Design_Tool.configure(bg='green')
                     
                     
-                    
-                    
-                    
-                    
+                    # TODO
+             
     #####################################                
                     
     
@@ -4897,6 +4951,27 @@ class Application(Frame):
             head, tail = os.path.split(self.DESIGN_FILE)
             print(self.DESIGN_FILE)
             print(tail)
+                
+        if self.Scale.get() != "" :
+            svg = svgutils.transform.fromfile(self.DESIGN_FILE)
+            originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
+            width = ''
+            height =''
+            if(svg.width.find("p")!=-1):
+                width, a = svg.width.split("p")
+                height, c= svg.height.split("p")
+            elif(svg.width.find("mm")!=-1):
+                width, a, b = svg.width.split("m")
+                height, c, d= svg.height.split("m")
+            else :
+                width = svg.width
+                height = svg.height
+
+            originalSVG.scale(self.Scale.get(), self.Scale.get())
+            figure = svgutils.compose.Figure((float)(width)* (float)(self.Scale.get()), (float)(height)*(float)(self.Scale.get()), originalSVG)
+
+            figure.save(self.DESIGN_FILE)
+            self.menu_Reload_Design()    
             
         #check that the value is between 0 and 360
         if self.Angle.get() != "" :
@@ -4924,28 +4999,28 @@ class Application(Frame):
                 width = svg.width
                 height = svg.height
                 
-            if((int)(res)%90 ==0) :     
+        
+            if(self.pythagore.get() == True):
+                print('on passe par ici')
+                self.pythagore.set(0)
+                newval = sqrt(((float)(width)**2)+((float)(height)**2))
+                tmpX = (newval/2)-((float)(width)/2)
+                tmpY = (newval/2)-((float)(height)/2)
+                originalSVG.moveto(tmpX,tmpY,1)
                 originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
-                figure = svgutils.compose.Figure(svg.width, svg.height, originalSVG)
+                newval = (str)(newval)+"mm"
+                figure = svgutils.compose.Figure(newval, newval, originalSVG)
                 figure.save(self.DESIGN_FILE)
                 self.menu_Reload_Design()
                 
             else :
-                #originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
-                
-                if(self.pythagore.get() == True):
-                    self.pythagore.set(0)
-                    newval = sqrt(((float)(width)**2)+((float)(height)**2))
-                    originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
-                    figure = svgutils.compose.Figure(newval, newval, originalSVG)
-                    figure.save(self.DESIGN_FILE)
-                    self.menu_Reload_Design()
-                    
-                else :
-                    originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
-                    figure = svgutils.compose.Figure(width, height, originalSVG)
-                    figure.save(self.DESIGN_FILE)
-                    self.menu_Reload_Design()
+                print('on passe aussi par la ')
+                originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
+                newheight = (str)(width)+"mm"
+                newwidth = (str)(height)+"mm"
+                figure = svgutils.compose.Figure(newwidth, newheight, originalSVG)
+                figure.save(self.DESIGN_FILE)
+                self.menu_Reload_Design()
             
         if self.PosX.get() != "" and self.PosY.get() != "":
             print(self.w)
@@ -5010,22 +5085,15 @@ class Application(Frame):
                     else :  
                         self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50 )
                         self.PreviewCanvas_frame.place(x=220, y=10)
-                   
-                            
+                       
                     self.Label_Design_Tool.place(x=place_object_in_right_panel_x,y=place_object_in_right_panel_y)
-                    self.separator_adv10.place(x=place_object_in_right_panel_x-80, y=place_object_in_right_panel_y+30,width=220, height=2)
                     
                     self.Hide_Design_Button.place (x=place_object_in_right_panel_x-70, y=Yloc, width=200, height=30)
                     self.Cancel_Design_Tool.place (x=place_object_in_right_panel_x+35, y=Yloc-35, width=95, height=30)
                     self.Validate_Design_Tool.place (x=place_object_in_right_panel_x-70, y=Yloc-35, width=95, height=30)
                     self.Cancel_Design_Tool.configure(bg='light coral')
                     self.Validate_Design_Tool.configure(bg='green')
-                    
-                    
-                    # TODO
-                    
-                    
-                    
+
             
                     self.Label_PosY.place(x=place_object_in_right_panel_x-80, y=Yloc-70, width=110, height=21)
                     self.Entry_PosY.place(x=place_object_in_right_panel_x+20, y=Yloc-70, width=110, height=23)
@@ -5035,14 +5103,14 @@ class Application(Frame):
         
                     self.Label_Angle.place(x=place_object_in_right_panel_x-80, y=Yloc-130, width=110, height=21)
                     self.Entry_Angle.place(x=place_object_in_right_panel_x+20, y=Yloc-130, width=110, height=21)
-                        
-                    self.Label_Name.place(x=place_object_in_right_panel_x-80, y=Yloc-160, width=110, height=21)
-                    self.Entry_Name.place(x=place_object_in_right_panel_x+20, y=Yloc-160, width=110, height=21)
-                        
-                    self.separator_adv11.place(x=place_object_in_right_panel_x-80, y=Yloc-170,width=220, height=2)
 
-     
                     
+                    self.Label_Scale.place(x=place_object_in_right_panel_x-80, y=Yloc-160, width=110, height=21)
+                    self.Entry_Scale.place(x=place_object_in_right_panel_x+20, y=Yloc-160, width=110, height=21)
+                        
+                    self.Label_Name.place(x=place_object_in_right_panel_x-80, y=Yloc-190, width=110, height=21)
+                    self.Entry_Name.place(x=place_object_in_right_panel_x+20, y=Yloc-190, width=110, height=21)
+
                 else :
                     self.Label_Design_Tool.place_forget()
                     self.Label_PosY.place_forget()     
@@ -5053,8 +5121,10 @@ class Application(Frame):
                     self.Label_Angle.place_forget()
                     self.Label_Name.place_forget()
                     self.Entry_Name.place_forget()
-                    self.separator_adv10.place_forget()
-                    self.separator_adv11.place_forget()
+
+                    self.Entry_Scale.place_forget()
+                    self.Label_Scale.place_forget()
+
                     self.Validate_Design_Tool.place_forget()
                     self.Cancel_Design_Tool.place_forget()
                     self.Hide_Design_Button.place_forget()
