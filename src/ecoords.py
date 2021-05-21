@@ -183,18 +183,7 @@ class ECoord:
             src_img = self.src_image.load()
             for i in range(0,height):                
                 for j in range(0,width):
-                    img[j,i] = src_img[j%img_w,i%img_h] 
-            
-            #        
-            #(x1,y1,x2,y2) = self.image.getbbox()
-            #(xmin,xmax,ymin,ymax) = self.bounds
-            
-            #xmax=max(xmax,x1,x2)
-            #ymax=max(ymax,y1,y2)
-            #xmin=min(xmin,x1,x2)
-            #ymin=min(ymin,y1,y2)
-            #self.bounds = (xmin,xmax,ymin,ymax)
-            #        
+                    img[j,i] = src_img[j%img_w,i%img_h]       
             
             self.image.save("image.png")
             print("Raster filling complete")

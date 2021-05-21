@@ -51,7 +51,10 @@ import cspsubdiv
 import traceback
 import struct
 import svgutils
+import time
 from svgutils.compose import *
+from time import time, sleep
+from copy import copy, deepcopy
 
 DEBUG = False
 if DEBUG:
@@ -150,6 +153,9 @@ class Application(Frame):
             
         self.pos_offset=[0.0,0.0]
         
+    def cancel_goscale(self):
+        self.cancel.set(1)
+        
     def createWidgets(self):
         self.initComplete = 0
         self.stop=[True]
@@ -157,7 +163,7 @@ class Application(Frame):
         self.k40 = None
         self.run_time = 0
         
-        self.master.bind("<Configure>", self.Master_Configure)
+        self.master.bind("<Configure>", self.Master_Configure2)
         self.master.bind('<Enter>', self.bindConfigure)
         self.master.bind('<F1>', self.KEY_F1)
         self.master.bind('<F2>', self.KEY_F2)
@@ -249,6 +255,7 @@ class Application(Frame):
         self.inside_first = BooleanVar()
         self.rotary       = BooleanVar()
         self.pythagore = BooleanVar()
+        self.cancel = BooleanVar()
         
 
         self.ht_size    = StringVar()
@@ -282,6 +289,7 @@ class Application(Frame):
         self.NewPosX       = StringVar()
         self.NewPosY       = StringVar()
         self.optimization_for_filling = bool()
+        self.Scale=StringVar()
         
 
         self.bezier_M1     = StringVar()
@@ -303,8 +311,10 @@ class Application(Frame):
         self.LaserXscale = StringVar()
         self.LaserYscale = StringVar()
         self.LaserRscale = StringVar()
+        self.chooseGoScale = StringVar()
 
         self.rapid_feed = StringVar()
+        self.tmpVal = 0
 
         self.gotoX = StringVar()
         self.gotoY = StringVar()
@@ -315,6 +325,10 @@ class Application(Frame):
         self.batch_path    = StringVar()
         self.ink_timeout   = StringVar()
         self.check = BooleanVar()
+      
+
+        
+        self.Write_In_File= BooleanVar()
     
         
         self.t_timeout  = StringVar()
@@ -328,10 +342,15 @@ class Application(Frame):
         self.comb_engrave = BooleanVar()
         self.comb_vector  = BooleanVar()
         self.zoom2image   = BooleanVar()
+        self.boolRaster   = 0
 
         self.trace_w_laser  = BooleanVar()
         self.trace_gap      = StringVar()
         self.trace_speed    = StringVar()
+        
+        self.XLEFT = 0
+        self.YTOP = 0 
+        
         
         ###########################################################################
         #                         INITILIZE VARIABLES                             #
@@ -344,6 +363,7 @@ class Application(Frame):
         self.include_Gcde.set(1)
         self.include_Time.set(0)
         self.advanced.set(0)
+        
         
         self.halftone.set(1)
         self.mirror.set(0)
@@ -359,10 +379,14 @@ class Application(Frame):
         self.post_exec.set(0)
         self.check.set(0)
         self.pythagore.set(1)
+
+        self.chooseGoScale.set("0")
+        self.cancel.set(0)
         
         self.pre_pr_crc.set(1)
         self.inside_first.set(1)
         self.rotary.set(0)
+        self.Write_In_File.set(1)
         
         self.ht_size.set(500)
 
@@ -439,7 +463,14 @@ class Application(Frame):
         
         self.laserX    = 0.0
         self.laserY    = 0.0
+        self.laserX_GoScale    = 0.0
+        self.laserY_GoScale    = 0.0
+        self.posGoScale = []
+        self.posGoScaleBlue = []
+        self.posGoScaleRed = []
+        self.posGoScaleEng = []
         self.PlotScale = 1.0
+        self.PlotScale2 = 1.0
         self.GUI_Disabled = False
 
         # PAN and ZOOM STUFF
@@ -623,8 +654,7 @@ class Application(Frame):
         # Design Tool Settings Column    #
         self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         self.Label_Design_Tool = Label(self.master,text="Design Tool Settings",anchor=CENTER)
-        self.separator_adv = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
-
+        #self.separator_adv = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
 
         #cacher le menu vertical de Design tool settings
         self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
@@ -638,6 +668,12 @@ class Application(Frame):
         self.Name.trace_variable("w", self.Entry_Reng_passes_Callback)
         self.NormalColor =  self.Entry_Name.cget('bg')
         
+        self.Label_Scale = Label(self.master,text="Scale")
+        self.Entry_Scale = Entry(self.master,width="15")
+        self.Entry_Scale.configure(textvariable=self.Scale,justify='center',fg="black")
+        self.Scale.trace_variable("w", self.Entry_Reng_passes_Callback)
+        self.NormalColor =  self.Entry_Scale.cget('bg')
+
         self.Label_Angle = Label(self.master,text="Angle")
         self.Entry_Angle   = Entry(self.master,width="15")
         self.Entry_Angle.configure(textvariable=self.Angle,justify='center',fg="black")
@@ -715,6 +751,11 @@ class Application(Frame):
         self.Checkbutton_Rotary_Enable_adv.configure(variable=self.rotary)
         self.rotary.trace_variable("w", self.Reset_RasterPath_and_Update_Time)
 
+        self.Label_Write_In_File = Label(self.master,text="Write in file")
+        self.Checkbutton_Write_In_File = Checkbutton(self.master,text="")
+        self.Checkbutton_Write_In_File.configure(variable=self.Write_In_File)
+
+
 
         #####
         self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
@@ -765,6 +806,8 @@ class Application(Frame):
         
         # End Right Column #
         self.calc_button = Button(self.master,text="Calculate Raster Time", command=self.menu_Calc_Raster_Time)
+        
+        self.cancel_goscale_button = Button(self.master, text="Cancel Go Scale Software", command=self.cancel_goscale)
 
         #GEN Setting Window Entry initializations
         self.Entry_Sspeed    = Entry()
@@ -840,7 +883,7 @@ class Application(Frame):
         top_Tools.add("command", label = "Fill with design", command = self.menu_filling    )
         top_Tools.add_separator()
         top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_hardware)
-        top_Tools.add("command", label = "Go scale software", command = self.menu_go_scale_software)
+        top_Tools.add("command", label = "Go scale software", command = self.menu_Tool_Open_Go_Scale_Software)
         top_Tools.add_separator()
         top_Tools.add("command", label = "Initialize Laser <Ctrl-i>", command = self.Initialize_Laser)
         top_Tools.add_cascade(label="USB", menu=USBmenu)
@@ -1254,10 +1297,10 @@ class Application(Frame):
     def refreshTime(self):
         if not self.include_Time.get():
             return
-        if self.units.get() == 'in':
-            factor =  60.0
-        else : 
-            factor = 25.4
+       # if self.units.get() == 'in':
+         #   factor =  60.0
+        #else : 
+        factor = 25.4
 
         Raster_eng_feed = float(self.Reng_feed.get()) / factor
         Vector_eng_feed = float(self.Veng_feed.get()) / factor
@@ -1268,7 +1311,6 @@ class Application(Frame):
         Vector_cut_passes = float(self.Vcut_passes.get())
         Gcode_passes      = float(self.Gcde_passes.get())
 
-        rapid_feed = 100.0 / 25.4   # 100 mm/s move feed to be confirmed
 
         if self.RengData.rpaths:
             Reng_time=0
@@ -1288,10 +1330,9 @@ class Application(Frame):
             t_accel = self.RengData.n_scanlines * accel_time
             Reng_time  =  ( (self.RengData.len)/Raster_eng_feed ) * Raster_eng_passes + t_accel
         if self.VengData.len!=None:
-            Veng_time  =  (self.VengData.len / Vector_eng_feed + self.VengData.move / rapid_feed) * Vector_eng_passes
+            Veng_time  =  (self.VengData.len / Vector_eng_feed + self.VengData.move / Vector_eng_feed) * Vector_eng_passes
         if self.VcutData.len!=None:
-            Vcut_time  =  (self.VcutData.len / Vector_cut_feed + self.VcutData.move / rapid_feed) * Vector_cut_passes
-            
+            Vcut_time  =  ((self.VcutData.len / Vector_cut_feed + self.VcutData.move / Vector_cut_feed) * Vector_cut_passes)
         Gcode_time =  self.GcodeData.gcode_time * Gcode_passes
 
         self.Reng_time.set("Raster Engrave: %s" %(self.format_time(Reng_time)))  
@@ -1313,6 +1354,7 @@ class Application(Frame):
         
         self.PreviewCanvas.delete("HUD")
         self.calc_button.place_forget()
+        self.cancel_goscale_button.place_forget()
         
         if self.GcodeData.ecoords == []:
             self.PreviewCanvas.create_text(HUD_X, HUD_Y             , fill = "red"  ,text =self.Vcut_time.get(), anchor="se",tags="HUD")
@@ -1324,12 +1366,30 @@ class Application(Frame):
                 #except:
                 #    pass
                 #self.calc_button = Button(self.master,text="Calculate Raster Time", command=self.menu_Calc_Raster_Time)
-                self.calc_button.place(x=HUD_X2, y=HUD_Y2, width=120+20, height=17, anchor="se")   
+                if (self.designtool.get() == True):
+                    Xbutton = w -250
+                else :
+                    Xbutton = w - 20
+                self.calc_button.place(x=Xbutton, y=HUD_Y2, width=140, height=17, anchor="se")   
+                self.cancel_goscale_button.place(x=Xbutton, y=HUD_Y2-20, width=160, height=17, anchor="se")
+                self.cancel_goscale_button.configure(bg='light coral')
             else:
+                if (self.designtool.get() == True):
+                    Xbutton = w -250
+                else :
+                    Xbutton = w - 20
+                self.cancel_goscale_button.place(x=Xbutton, y=HUD_Y2-20, width=160, height=17, anchor="se")
+                self.cancel_goscale_button.configure(bg='light coral')
                 self.calc_button.place_forget()
-                self.PreviewCanvas.create_text(HUD_X, HUD_Y-HUD_vspace*2, fill = "black",
+                self.PreviewCanvas.create_text(HUD_X, HUD_Y-30, fill = "black",
                                                text =self.Reng_time.get(), anchor="se",tags="HUD")           
         else:
+            if (self.designtool.get() == True):
+                Xbutton = w -250
+            else :
+                Xbutton = w - 20
+            self.cancel_goscale_button.place(x=Xbutton, y=HUD_Y2-20, width=160, height=17, anchor="se")
+            self.cancel_goscale_button.configure(bg='light coral')
             self.PreviewCanvas.create_text(HUD_X, HUD_Y, fill = "black",text =self.Gcde_time.get(), anchor="se",tags="HUD")
         ##########################################
 
@@ -1782,6 +1842,7 @@ class Application(Frame):
         elif (self.units.get() == 'mm') and (self.funits.get()=='in/min'):
             self.funits.set('mm/s')
             self.Scale_Linear_Inputs('mm')
+        
             
     def Scale_Linear_Inputs(self, new_units=None):
         if new_units=='in':
@@ -1908,6 +1969,16 @@ class Application(Frame):
 
             print('Check button unchecked')
             self.Open_with_filling_without_optimization()
+            
+    def check_radio_button_go_scale_software(self, event):
+        if self.check.get() ==  1:
+            print('Check button checked')
+            self.Open_with_filling_with_optimization()
+            
+        else:
+
+            print('Check button unchecked')
+            self.Open_with_filling_without_optimization()
         
     def affiche(self):
         print(self.optimization_for_filling)
@@ -1965,6 +2036,90 @@ class Application(Frame):
         self.OPTI_Close = Button(opti_settings,text="Close")
         self.OPTI_Close.place(x=Xbut+70, y=Ybut, width=130, height=30, anchor="center")
         self.OPTI_Close.bind("<ButtonRelease-1>", self.Close_Current_Window_Click)
+
+
+    def verify_radiobutton(self,event=None):
+        
+        if(self.chooseGoScale.get() == '1'):
+            self.menu_go_scale_software(self.chooseGoScale.get())
+      
+        if(self.chooseGoScale.get() == '2'):
+            self.menu_go_scale_software(self.chooseGoScale.get())
+         
+        if(self.chooseGoScale.get() == '3'):
+            self.menu_go_scale_software(self.chooseGoScale.get())
+            
+    
+        
+
+
+    def menu_Tool_Open_Go_Scale_Software(self):
+       
+        choose_go_scale = Toplevel(width=350, height=200)
+        choose_go_scale.grab_set() 
+        choose_go_scale.focus_set()
+        choose_go_scale.resizable(0,0)
+        choose_go_scale.title('Choose the type of Go Scale ')
+        choose_go_scale.iconname("Choose the type of Go Scale ")
+
+        try:
+            choose_go_scale.iconbitmap(bitmap="@emblem64")
+        except:
+            debug_message(traceback.format_exc())
+            pass
+
+        D_Yloc  = 6
+        D_dY = 26
+        xd_label_L = 12
+
+        w_label=150
+        w_entry=40
+        w_units=45
+        xd_entry_L=xd_label_L+w_label+10
+        xd_units_L=xd_entry_L+w_entry+5
+        sep_border=10
+
+        
+        D_Yloc=D_Yloc+D_dY
+        self.Label_raster = Label(choose_go_scale,text="Raster Engrave")
+        self.Label_raster.place(x=xd_label_L, y=D_Yloc, width=113, height=21)
+        
+        self.Checkbutton_Raster = Radiobutton(choose_go_scale,variable=self.chooseGoScale, value = '1', anchor=W)
+        self.Checkbutton_Raster.place(x=w_label+22, y=D_Yloc, width=75, height=23)
+
+
+        
+        D_Yloc=D_Yloc+D_dY
+        self.Label_Vengrave = Label(choose_go_scale,text="Vector Engrave")
+        self.Label_Vengrave.place(x=xd_label_L, y=D_Yloc, width=113, height=21)
+        
+        self.Checkbutton_Vengrave = Radiobutton(choose_go_scale, variable=self.chooseGoScale, value = '2',anchor=W)
+        self.Checkbutton_Vengrave.place(x=w_label+22, y=D_Yloc, width=75, height=23)
+       
+
+        
+        D_Yloc=D_Yloc+D_dY
+        self.Label_Vcut = Label(choose_go_scale,text="Vector Cut")
+        self.Label_Vcut.place(x=xd_label_L, y=D_Yloc, width=113, height=21)
+        
+        self.Checkbutton_Vcut = Radiobutton(choose_go_scale, variable=self.chooseGoScale, value = '3', anchor=W)
+        self.Checkbutton_Vcut.place(x=w_label+22, y=D_Yloc, width=75, height=23)
+      
+        
+        D_Yloc=D_Yloc+D_dY
+        
+        ## Buttons ##
+        choose_go_scale.update_idletasks()
+        Ybut=int(choose_go_scale.winfo_height())-30
+        Xbut=int(choose_go_scale.winfo_width()/2)
+
+        self.OPTI_VALIDATE = Button(choose_go_scale,text="Validate", command=self.verify_radiobutton)
+        self.OPTI_VALIDATE.place(x=Xbut-90, y=Ybut, width=130, height=30, anchor="center")
+        
+        self.OPTI_Close = Button(choose_go_scale,text="Close")
+        self.OPTI_Close.place(x=Xbut+70, y=Ybut, width=130, height=30, anchor="center")
+        self.OPTI_Close.bind("<ButtonRelease-1>", self.Close_Current_Window_Click)
+
 
 
 
@@ -2130,7 +2285,7 @@ class Application(Frame):
         
     def Open_SVG(self,filemname):
         self.resetPath()
-        
+        self.posGoScale = []
         self.SVG_FILE = filemname
         svg_reader =  SVG_READER()
         svg_reader.set_inkscape_path(self.inkscape_path.get())
@@ -2228,6 +2383,7 @@ class Application(Frame):
         self.RengData.set_image(svg_reader.raster_PIL)
         
         if (self.RengData.image != None):
+    
             self.wim, self.him = self.RengData.image.size
             self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
             #self.make_raster_coords()
@@ -2272,11 +2428,11 @@ class Application(Frame):
                     
                 if self.mirror.get():
                     image_temp = ImageOps.mirror(image_temp)
-
+                
                 if self.rotate.get():
                     #image_temp = image_temp.rotate(90,expand=True)
                     image_temp = self.rotate_raster(image_temp)
-
+                    
                 Xscale = float(self.LaserXscale.get())
                 Yscale = float(self.LaserYscale.get())    
                 if self.rotary.get():
@@ -3595,9 +3751,7 @@ class Application(Frame):
             feed_factor = 1.0
         return feed_factor
     
-    def filling(self):
-
-        
+    def filling(self):      
         
         laserX = float(self.LaserXsize.get()) / self.units_scale
         laserY = float(self.LaserYsize.get()) / self.units_scale
@@ -3628,20 +3782,19 @@ class Application(Frame):
         self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.RengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         
-        self.wim = self.wim * 2
-        self.him = self.him * 2
-        
-        
+        #self.wim = self.wim * 2
+        #self.him = self.him * 2
+
         self.menu_View_Refresh()
-        
     
   
    
     def send_data(self,operation_type=None, laseron = True, output_filename = None):
-        if laseron == True :
-            output_filename = "lhymicro_output.txt"
-        else:
-            output_filename = "lhymicro_output_go_scale.txt"
+        if self.Write_In_File.get() == 1 : 
+            if laseron == True :
+                output_filename = "lhymicro_output.txt"
+            else:
+                output_filename = "lhymicro_output_go_scale.txt"
 
         num_passes=0
         if self.k40 == None and output_filename == None:
@@ -3713,6 +3866,7 @@ class Application(Frame):
                 Vcut_coords = self.VcutData.ecoords
                 if self.mirror.get() or self.rotate.get():
                     Vcut_coords = self.mirror_rotate_vector_coords(Vcut_coords)
+
 
                 Vcut_coords,startx,starty = self.scale_vector_coords(Vcut_coords,startx,starty)
                 Vector_Cut_egv_inst = egv(target=lambda s:Vector_Cut_data.append(s))   
@@ -4236,7 +4390,7 @@ class Application(Frame):
             self.master.update()
             
             if output_filename != None:
-                self.write_egv_to_file(data,output_filename)
+                self.write_egv_to_file(data,True, output_filename)
             else:
                 self.send_egv_data(data, 1, output_filename)
                 self.menu_View_Refresh()
@@ -4278,26 +4432,6 @@ class Application(Frame):
         
     ##########################################################################
     ##########################################################################
-    def write_egv_to_file(self,data,fname):
-        if len(data) == 0:
-            raise Exception("No data available to write to file.")
-        try:
-            fout = open(fname,'w')
-        except:
-            raise Exception("Unable to open file ( %s ) for writing." %(fname))
-        fout.write("Document type : LHYMICRO-GL file\n")
-        fout.write("Creator-Software: K40 Whisperer\n")
-        
-        fout.write("\n")
-        fout.write("%0%0%0%0%")
-        for char_val in data:
-            char = chr(char_val)
-            fout.write("%s" %(char))
-            
-        #fout.write("\n")
-        fout.close
-        self.menu_View_Refresh()
-        self.statusMessage.set("Data saved to: %s" %(fname))
         
     def Home(self, event=None):
         if self.GUI_Disabled:
@@ -4450,6 +4584,9 @@ class Application(Frame):
         dummy_event.widget=self.master
         self.Master_Configure(dummy_event,1)
         self.Master_Configure2(dummy_event,1)
+
+        self.posGoScale = []
+        self.clean_list()
         self.Plot_Data()
         xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
         W = xmax-xmin
@@ -4514,11 +4651,136 @@ class Application(Frame):
             self.statusMessage.set("No vector data to cut")
         self.Finish_Job()
         
-    #TODO
-    def menu_go_scale_software(self,event=None):
-        print('menu_go_scale_software')
+        
+    def clean_list (self, event=None):
+        self.posGoScaleRed = []
+        self.posGoScaleBlue = []
 
-    #TODO
+        
+    
+    def menu_go_scale_software(self,choose, event=None):
+        self.cancel.set(0)
+        print('menu_go_scale_software')
+        dot_col2 = "magenta2"
+        tag = 'LaserDot'
+        
+
+        # cas du Go Scale Software pour le Raster Engrave
+        if (choose == '1') :
+            
+            print('Not implemented yet ...')
+            
+            """
+            self.menu_Calc_Raster_Time()
+
+            speed = (float)(self.Vcut_feed.get())
+            
+            chrono = time()
+            cpt = 0
+            self.posGoScaleEng = []
+            tmp = self.RengData.src_ecoords    
+            #tmp = self.mirror_rotate_vector_coords(tmp)
+            
+            for i in range(len(self.RengData.ecoords)-1,0, -1 ):
+                self.posGoScaleEng.append([tmp[i][0], -tmp[i][1],self.XLEFT,self.YTOP])
+     
+            while True :
+                #Cas ou l'utilisateur clique sur le bouton Cancel
+                if(self.cancel.get()==1):
+                    self.statusMessage.set('GO SCALE CANCELED')
+                    break
+                #Cas ou toutes les coordonnées ont été traités
+                if (cpt == len(self.posGoScaleEng)):
+                    now = time()
+                    self.statusMessage.set('GO SCALE FINISHED IN ' + str(self.format_time((now - chrono))))
+                    break
+                #Cas général ou on calcule le temps de déplacement entre deux points
+                if (cpt < (len(self.posGoScaleEng)-1) ):
+                    longueur = sqrt(((self.posGoScaleEng[cpt+ 1][0]-self.posGoScaleEng[cpt][0])**2)+((self.posGoScaleEng[cpt+ 1][1]-self.posGoScaleEng[cpt][1])**2)) *25.4
+                    temps = longueur / speed
+
+                self.Plot_circle(self.posGoScaleEng[cpt][0], self.posGoScaleEng[cpt][1], self.posGoScaleEng[cpt][2],self.posGoScaleEng[cpt][3],self.PlotScale,dot_col2,radius=2,cross_hair=False)
+    
+                self.statusMessage.set('POSITION GO SCALE SOFTWARE : X = ' + str(format(self.posGoScaleEng[cpt][0], '.2f')) +  '; Y = ' +  str(format(self.posGoScaleEng[cpt][1], '.2f')))
+                startTime = time()
+                self.PreviewCanvas.update()
+                cpt = cpt +1
+                while (startTime+temps > time()) : 
+                    pass
+                #self.PreviewCanvas.delete(tag)
+            """
+            
+        # cas du Go Scale Software pour le Vector Engrave
+        elif(choose == '2'):
+            
+            speed = (float)(self.Veng_feed.get())
+            
+            chrono = time()
+            
+            cpt = 0
+            while True :
+                #Cas ou l'utilisateur clique sur le bouton Cancel
+                if(self.cancel.get()==1):
+                    self.statusMessage.set('GO SCALE CANCELED')
+                    break
+                #Cas ou toutes les coordonnées ont été traités
+                if (cpt == len(self.posGoScaleBlue)):
+                    now = time()
+                    self.statusMessage.set('GO SCALE FINISHED IN ' + str(self.format_time((now - chrono))))
+                    break
+                #Cas général ou on calcule le temps de déplacement entre deux points
+                if (cpt < (len(self.posGoScaleBlue)-1) ):
+                    longueur = sqrt(((self.posGoScaleBlue[cpt+ 1][0]-self.posGoScaleBlue[cpt][0])**2)+((self.posGoScaleBlue[cpt+ 1][1]-self.posGoScaleBlue[cpt][1])**2)) *25.4
+                    temps = longueur / speed
+                
+                self.Plot_circle(self.posGoScaleBlue[cpt][0], self.posGoScaleBlue[cpt][1], self.posGoScaleBlue[cpt][2],self.posGoScaleBlue[cpt][3],self.PlotScale,dot_col2,radius=5,cross_hair=False)
+    
+                self.statusMessage.set('POSITION GO SCALE SOFTWARE : X = ' + str(format(self.posGoScaleBlue[cpt][0], '.2f')) +  '; Y = ' +  str(format(self.posGoScaleBlue[cpt][1], '.2f')))
+                startTime = time()
+                self.PreviewCanvas.update()
+                cpt = cpt +1
+                while (startTime+temps > time()) : 
+                    pass
+                self.PreviewCanvas.delete(tag)
+        
+        # cas du Go Scale Software pour le Vector Cut
+        elif (choose == '3') :
+
+            speed = (float)(self.Vcut_feed.get())
+
+            chrono = time()
+    
+            cpt = 0
+            while True :
+                #Cas ou l'utilisateur clique sur le bouton Cancel
+                if(self.cancel.get()==1):
+                    self.statusMessage.set('GO SCALE CANCELED')
+                    break
+                #Cas ou toutes les coordonnées ont été traités
+                if (cpt == len(self.posGoScaleRed)):
+                    now = time()
+                    self.statusMessage.set('GO SCALE FINISHED IN ' + str(self.format_time(int((now - chrono)))))
+                    
+                    break
+                #Cas général ou on calcule le temps de déplacement entre deux points
+                if (cpt < (len(self.posGoScaleRed)-1) ):
+                    longueur = sqrt(((self.posGoScaleRed[cpt+ 1][0]-self.posGoScaleRed[cpt][0])**2)+((self.posGoScaleRed[cpt+ 1][1]-self.posGoScaleRed[cpt][1])**2)) *25.4
+                    temps = longueur / speed
+               
+                
+                self.Plot_circle(self.posGoScaleRed[cpt][0], self.posGoScaleRed[cpt][1], self.posGoScaleRed[cpt][2],self.posGoScaleRed[cpt][3],self.PlotScale,dot_col2,radius=5,cross_hair=False)
+    
+                self.statusMessage.set('POSITION GO SCALE SOFTWARE : X = ' + str(format(self.posGoScaleRed[cpt][0], '.2f')) +  '; Y = ' +  str(format(self.posGoScaleRed[cpt][1], '.2f')))
+                startTime = time()
+                self.PreviewCanvas.update()
+                cpt = cpt +1
+                while (startTime+temps > time()) : 
+                    pass
+                self.PreviewCanvas.delete(tag)
+                
+              
+             
+
     def menu_filling(self,event=None):
         print('applying filling algorithm')
         self.filling()
@@ -4812,6 +5074,12 @@ class Application(Frame):
                         adv_Yloc=adv_Yloc+25
                         self.Label_Rotary_Enable_adv.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
                         self.Checkbutton_Rotary_Enable_adv.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                        
+                        adv_Yloc=adv_Yloc+25
+                        self.Label_Write_In_File.place(x=Xadvanced, y=adv_Yloc, width=w_label_adv, height=21)
+                        self.Checkbutton_Write_In_File.place(x=Xadvanced+w_label_adv+2, y=adv_Yloc, width=25, height=23)
+                        
+                        
                     else:
                         #self.Label_Advanced_column.place_forget()
                         #self.separator_adv.place_forget()
@@ -4831,6 +5099,8 @@ class Application(Frame):
                         self.Checkbutton_Inside_First_adv.place_forget()
                         self.Label_Rotary_Enable_adv.place_forget()
                         self.Checkbutton_Rotary_Enable_adv.place_forget()
+                        self.Label_Write_In_File.place_forget()
+                        self.Checkbutton_Write_In_File.place_forget()
 
                     adv_Yloc = BUinit
                     self.Hide_Adv_Button.place (x=Xadvanced, y=adv_Yloc, width=wadv_use, height=30)
@@ -4900,7 +5170,8 @@ class Application(Frame):
                     self.separator_adv3.place_forget()
                     self.Label_Inside_First_adv.place_forget()
                     self.Checkbutton_Inside_First_adv.place_forget()
-
+                    self.Label_Write_In_File.place_forget()
+                    self.Checkbutton_Write_In_File.place_forget()
                     self.Label_Rotary_Enable_adv.place_forget()
                     self.Checkbutton_Rotary_Enable_adv.place_forget()
 
@@ -4938,25 +5209,11 @@ class Application(Frame):
     def Verify_Input_Design_Tool(self):
         
         if self.Name.get() != "" :
-            print(self.Name.get())
             head, tail = os.path.split(self.DESIGN_FILE)
-            print(self.DESIGN_FILE)
-            print(tail)
-            
-        #check that the value is between 0 and 360
-        if self.Angle.get() != "" :
-            angle_value = float(self.Angle.get()) % 360
-            res = round(angle_value,3)
-            print(res)
-            self.NewAngle = res
-            self.Plot_Data()
-            
+                
+        if self.Scale.get() != "" :
             svg = svgutils.transform.fromfile(self.DESIGN_FILE)
             originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
-            print("width")
-            print(svg.width)
-            print("height")
-            print(svg.height)
             width = ''
             height =''
             if(svg.width.find("p")!=-1):
@@ -4968,33 +5225,57 @@ class Application(Frame):
             else :
                 width = svg.width
                 height = svg.height
-                
-            if((int)(res)%90 ==0) :     
+
+            originalSVG.scale(self.Scale.get(), self.Scale.get())
+            figure = svgutils.compose.Figure((float)(width)* (float)(self.Scale.get()), (float)(height)*(float)(self.Scale.get()), originalSVG)
+
+            figure.save(self.DESIGN_FILE)
+            self.menu_Reload_Design()    
+            
+        #check that the value is between 0 and 360
+        if self.Angle.get() != "" :
+            angle_value = float(self.Angle.get()) % 360
+            res = round(angle_value,3)
+            self.NewAngle = res
+            self.posGoScale = []
+            self.clean_list()
+            self.Plot_Data()
+            
+            svg = svgutils.transform.fromfile(self.DESIGN_FILE)
+            originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
+            width = ''
+            height =''
+            if(svg.width.find("p")!=-1):
+                width, a = svg.width.split("p")
+                height, c= svg.height.split("p")
+            elif(svg.width.find("mm")!=-1):
+                width, a, b = svg.width.split("m")
+                height, c, d= svg.height.split("m")
+            else :
+                width = svg.width
+                height = svg.height
+        
+            if(self.pythagore.get() == True):
+                self.pythagore.set(0)
+                newval = sqrt(((float)(width)**2)+((float)(height)**2))
+                tmpX = (newval/2)-((float)(width)/2)
+                tmpY = (newval/2)-((float)(height)/2)
+                originalSVG.moveto(tmpX,tmpY,1)
                 originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
-                figure = svgutils.compose.Figure(svg.width, svg.height, originalSVG)
+                newval = (str)(newval)+"mm"
+                figure = svgutils.compose.Figure(newval, newval, originalSVG)
                 figure.save(self.DESIGN_FILE)
                 self.menu_Reload_Design()
                 
             else :
-                #originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
-                
-                if(self.pythagore.get() == True):
-                    self.pythagore.set(0)
-                    newval = sqrt(((float)(width)**2)+((float)(height)**2))
-                    originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
-                    figure = svgutils.compose.Figure(newval, newval, originalSVG)
-                    figure.save(self.DESIGN_FILE)
-                    self.menu_Reload_Design()
-                    
-                else :
-                    originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
-                    figure = svgutils.compose.Figure(width, height, originalSVG)
-                    figure.save(self.DESIGN_FILE)
-                    self.menu_Reload_Design()
+                originalSVG.rotate(res, (float)(width)/2, (float)(height)/2)
+                newheight = (str)(width)+"mm"
+                newwidth = (str)(height)+"mm"
+                figure = svgutils.compose.Figure(newwidth, newheight, originalSVG)
+                figure.save(self.DESIGN_FILE)
+                self.menu_Reload_Design()
             
         if self.PosX.get() != "" and self.PosY.get() != "":
-            print(self.w)
-            print(self.h)
             
             #SCALE : gestion de l'écriture de svg.height qui contient mm à la fin, il faut faire un split dessus
             #svg = svgutils.transform.fromfile(self.DESIGN_FILE)
@@ -5003,8 +5284,7 @@ class Application(Frame):
             #figure = svgutils.compose.Figure(float(svg.height) * 2, float(svg.width) * 2, originalSVG)
             #figure.save(self.DESIGN_FILE)
             #self.menu_Reload_Design()
-          
-            #print('OUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
+
             svg = svgutils.transform.fromfile(self.DESIGN_FILE)
             originalSVG = svgutils.compose.SVG(self.DESIGN_FILE)
             originalSVG.moveto(self.PosX.get(),self.PosY.get(),1)
@@ -5012,15 +5292,7 @@ class Application(Frame):
             figure.save(self.DESIGN_FILE)
             self.menu_Reload_Design()
             
-            
-            
-            
-            
-            
-            
-            
-            
-                    
+
     def Master_Configure2(self, event, update=0):
         BUinit = self.h-70
         Yloc = BUinit
@@ -5056,7 +5328,7 @@ class Application(Frame):
                         self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50 )
                         self.PreviewCanvas_frame.place(x=220, y=10)
                        
-                    self.Label_Design_Tool.place(x=place_object_in_right_panel_x,y=place_object_in_right_panel_y)
+                    self.Label_Design_Tool.place(x=place_object_in_right_panel_x -30 ,y=place_object_in_right_panel_y)
                     
                     self.Hide_Design_Button.place (x=place_object_in_right_panel_x-70, y=Yloc, width=200, height=30)
                     self.Cancel_Design_Tool.place (x=place_object_in_right_panel_x+35, y=Yloc-35, width=95, height=30)
@@ -5073,9 +5345,13 @@ class Application(Frame):
         
                     self.Label_Angle.place(x=place_object_in_right_panel_x-80, y=Yloc-130, width=110, height=21)
                     self.Entry_Angle.place(x=place_object_in_right_panel_x+20, y=Yloc-130, width=110, height=21)
+
+                    
+                    self.Label_Scale.place(x=place_object_in_right_panel_x-80, y=Yloc-160, width=110, height=21)
+                    self.Entry_Scale.place(x=place_object_in_right_panel_x+20, y=Yloc-160, width=110, height=21)
                         
-                    self.Label_Name.place(x=place_object_in_right_panel_x-80, y=Yloc-160, width=110, height=21)
-                    self.Entry_Name.place(x=place_object_in_right_panel_x+20, y=Yloc-160, width=110, height=21)
+                    self.Label_Name.place(x=place_object_in_right_panel_x-80, y=Yloc-190, width=110, height=21)
+                    self.Entry_Name.place(x=place_object_in_right_panel_x+20, y=Yloc-190, width=110, height=21)
                         
                     
 
@@ -5089,6 +5365,9 @@ class Application(Frame):
                     self.Label_Angle.place_forget()
                     self.Label_Name.place_forget()
                     self.Entry_Name.place_forget()
+
+                    self.Entry_Scale.place_forget()
+                    self.Label_Scale.place_forget()
                    
                    
                     self.Validate_Design_Tool.place_forget()
@@ -5100,7 +5379,9 @@ class Application(Frame):
                     
  
                 self.Set_Input_States()
-                
+            
+            self.posGoScale = []    
+            self.clean_list()
             self.Plot_Data()
             
     def Recalculate_RQD_Click(self, event):
@@ -5197,6 +5478,7 @@ class Application(Frame):
     def Plot_Data(self):
         self.PreviewCanvas.delete(ALL)
         self.calc_button.place_forget()
+        self.cancel_goscale_button.place_forget()
 
         for seg in self.segID:
             self.PreviewCanvas.delete(seg)
@@ -5249,6 +5531,7 @@ class Application(Frame):
         ###       Plot Raster Image        ###
         ######################################
         if self.RengData.image != None:
+            
             if self.include_Reng.get():   
                 try:
                     new_SCALE = (1.0/self.PlotScale)/self.input_dpi
@@ -5275,7 +5558,7 @@ class Application(Frame):
 
                         if self.mirror.get():
                             plot_im = ImageOps.mirror(plot_im)
-
+                        
                         if self.rotate.get():
                             plot_im = plot_im.rotate(180,expand=True)
                             nh=int(self.SCALE*self.wim)
@@ -5289,8 +5572,14 @@ class Application(Frame):
                 except:
                     self.SCALE = 1
                     debug_message(traceback.format_exc())
-                    
+                   
                 self.Plot_Raster(self.laserX+.001, self.laserY-.001, x_lft,y_top,self.PlotScale,im=self.UI_image)
+                self.XLEFT = x_lft
+                self.YTOP = y_top
+       
+                
+               
+               
         else:
             self.UI_image = None
 
@@ -5331,9 +5620,10 @@ class Application(Frame):
             
 
             plot_coords = self.VengData.ecoords
+            
             if self.mirror.get() or self.rotate.get():
                 plot_coords = self.mirror_rotate_vector_coords(plot_coords)
-
+                
             for line in plot_coords:
                 XY    = line
                 x1    = (XY[0]-xmin)
@@ -5350,6 +5640,7 @@ class Application(Frame):
         ###       Plot Vcut Coords         ###
         ######################################
         if self.include_Vcut.get():
+  
             loop_old = -1
 
             plot_coords = self.VcutData.ecoords
@@ -5433,6 +5724,9 @@ class Application(Frame):
             head_offset=True
         else:
             head_offset=False
+    
+        self.laserX_GoScale = x_lft
+        self.laserY_GoScale = y_top
         
         self.Plot_circle(self.laserX+xoff,self.laserY+yoff,x_lft,y_top,self.PlotScale,dot_col,radius=5,cross_hair=head_offset)
         
@@ -5528,18 +5822,95 @@ class Application(Frame):
                                                 fill=col,  outline=col, width = 0, stipple='gray50',tags=circle_tags ))
 
 
+    
+
+    def splitVcut(self, x1, y1, x2, y2,XX, YY, cpt, tab, n ):
+        midX = (x1 + x2)/2
+        midY = (y1 + y2)/2
+        
+        if (cpt < n):
+            self.splitVcut(x1,y1, midX, midY, XX, YY, cpt +1, tab, n)
+            self.splitVcut(midX, midY, x2, y2, XX, YY, cpt +1, tab, n)
+        else:
+            tab.insert(cpt,[midX, midY, XX, YY])
+            
+            
+       
     def Plot_Line(self, XX1, YY1, XX2, YY2, Xleft, Ytop, XlineShift, YlineShift, PlotScale, col, thick=0, tag_value='LaserTag'):
         xplt1 = Xleft + (XX1 + XlineShift )/PlotScale 
         xplt2 = Xleft + (XX2 + XlineShift )/PlotScale
         yplt1 = Ytop  - (YY1 + YlineShift )/PlotScale
         yplt2 = Ytop  - (YY2 + YlineShift )/PlotScale
         
+                 
+        longueur = sqrt(((XX2-XX1)**2) + ((YY2-YY1)**2)) * 25.4
+        
+        #Cas des traits supérieur à 10 mm alors on subdivise pour que le point du laser puisse parcours la droite en plusieurs étapes
+        
+        if (longueur > 10):
+            nb_subdivision = 5
+          
+            tabPos = []
+            
+            self.splitVcut(XX1, YY1, XX2, YY2,Xleft,Ytop, 0, tabPos, nb_subdivision)
+            
+            finalTab = []
+            for i in range(nb_subdivision):
+                finalTab.insert(i, tabPos[i])
+                
+            newTab = []
+            cpt = 0
+            
+            for i in range(len(tabPos),nb_subdivision,-1):
+                newTab.insert(cpt, tabPos[i-1])
+                cpt = cpt +1
+                
+            first = []
+            last = []
+            first.insert(0, [XX1, YY1, Xleft, Ytop]) 
+            last.insert(0, [XX2, YY2, Xleft, Ytop])
+            
+            result = []
+            result = first + finalTab + newTab + last
+            
+            for i in range(len(result)) :
+                
+                #Cas du Vector Engrave
+                if(col == "blue"):
+                   if ([result[i][0], result[i][1], Xleft, Ytop] !=   self.tmpVal ) :
+                       self.posGoScaleBlue.append([result[i][0], result[i][1], Xleft, Ytop])
+                       self.tmpVal = ([result[i][0], result[i][1], Xleft, Ytop])
+                #Cas du Vector Cut 
+                elif (col =="red"): 
+                    if ([result[i][0], result[i][1], Xleft, Ytop] !=   self.tmpVal ) :
+                        self.posGoScaleRed.append([result[i][0], result[i][1], Xleft, Ytop])
+                        self.tmpVal = ([result[i][0], result[i][1], Xleft, Ytop])
+                #Cas du Raster
+                else:
+                    if ([result[i][0], result[i][1], Xleft, Ytop] !=   self.tmpVal ) :
+                        self.posGoScaleEng.append([result[i][0], result[i][1], Xleft, Ytop])
+                        self.tmpVal =  ([result[i][0], result[i][1], Xleft, Ytop])
+                        
+        #Cas pour les traits suffisament petis qui ne nécéssitent pas de subdivision
+        else:
+            #cas du Vector Engrave sans subdivision
+            if(col == "blue"):
+                self.posGoScaleBlue.append([XX1,YY1,Xleft,Ytop])
+            #Cas du Vector Cut sans subdivision
+            elif (col =="red"): 
+                self.posGoScaleRed.append([XX1,YY1,Xleft,Ytop])
+            #Cas du Raster sans subdivision 
+            else:
+                self.posGoScaleEng.append([XX1,YY1,Xleft,Ytop])
+            
+  
         self.segID.append(
             self.PreviewCanvas.create_line( xplt1,
                                             yplt1,
                                             xplt2,
                                             yplt2,
                                             fill=col, capstyle="round", width = thick, tags=tag_value) )
+
         
     ################################################################################
     #                         Temporary Move Window                                #
