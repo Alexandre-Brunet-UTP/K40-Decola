@@ -781,7 +781,9 @@ class SVG_READER(inkex.Effect):
         self.document.getroot().set('height','%fmm' %(height_mm))
         self.document.getroot().set('viewBox', '%f %f %f %f' %(viewbox[0],viewbox[1],viewbox[2],viewbox[3]))
 
-        
+              
+
+
     def make_paths(self, txt2paths=False ):
         self.txt2paths = txt2paths
         msg               = ""

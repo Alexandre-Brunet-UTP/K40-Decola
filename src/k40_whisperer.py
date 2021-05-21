@@ -2130,7 +2130,7 @@ class Application(Frame):
         
     def Open_SVG(self,filemname):
         self.resetPath()
-               
+        
         self.SVG_FILE = filemname
         svg_reader =  SVG_READER()
         svg_reader.set_inkscape_path(self.inkscape_path.get())
@@ -2143,8 +2143,22 @@ class Application(Frame):
             try:
                 try:
                     svg_reader.parse_svg(self.SVG_FILE)
-                    svg_reader.make_paths()
+                    svg_reader.make_paths() 
+                    
+                    #
+                    #tmp = svgutils.compose.SVG(self.DESIGN_FILE)
+                    #tmp_f = svgutils.compose.Figure(self.LaserXsize.get() ,self.LaserYsize.get() , tmp)
+                    #tmp_f.save("design.svg")
+                    #self.DESIGN_FILE = os.path.dirname("design.svg")
+
+                    #svg_reader.parse_svg(self.SVG_FILE)
+                    #svg_reader.make_paths()
+                    
+                    #set_size
+                    #   
+                    
                 except SVG_PXPI_EXCEPTION as e:
+                    
                     pxpi_dialog = pxpiDialog(root,
                                            self.units.get(),
                                            svg_reader.SVG_Size,
@@ -3613,6 +3627,9 @@ class Application(Frame):
         self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
         self.RengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        
+        self.wim = self.wim * 2
+        self.him = self.him * 2
         
         
         self.menu_View_Refresh()
