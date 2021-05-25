@@ -5576,6 +5576,9 @@ class Application(Frame):
                             x_lft, y_bot, x_rgt, y_top, fill="gray80", outline="gray80", width = 0) )
 
 
+
+
+            
         ######################################
         ###       Plot Raster Image        ###
         ######################################
@@ -5643,12 +5646,16 @@ class Application(Frame):
             selectBounds : AABB
             selectBounds = selectedEntity.getBounds()
                 
-            x0 = x_lft + (selectBounds.xmin + XlineShift ) / self.PlotScale 
-            x1 = x_lft + (selectBounds.xmax + XlineShift ) / self.PlotScale
-            y0 = y_top + (selectBounds.ymin + YlineShift ) / self.PlotScale
-            y1 = y_top + (selectBounds.ymax + YlineShift ) / self.PlotScale
+            Xscale = 1/float(self.LaserXscale.get())
+            Yscale = 1/float(self.LaserYscale.get())
             
-            self.segID.append(self.PreviewCanvas.create_rectangle( x0, y0, x1, y1, outline="green", width = 1))
+            x0 = x_lft + (selectBounds.xmin*Xscale + XlineShift ) / self.PlotScale 
+            x1 = x_lft + (selectBounds.xmax*Xscale + XlineShift ) / self.PlotScale
+            y0 = y_top - (selectBounds.ymin*Yscale-ymax + YlineShift ) / self.PlotScale
+            y1 = y_top - (selectBounds.ymax*Yscale-ymax + YlineShift ) / self.PlotScale
+            
+            self.segID.append(self.PreviewCanvas.create_rectangle( x0, y0, x1, y1, outline="green", width = 2))
+
 
         ######################################
         ###       Plot Reng Coords         ###

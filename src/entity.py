@@ -66,7 +66,7 @@ class Entity:
 
     def resetTransform(self) -> None :
         self.__updateFlag = True
-        self.__bounds = AABB(0, 0, 0, 0)
+        self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
 
         if(self.__rengData != None) :
             self.__bounds = AABB(self.__rengData.bounds[0], self.__rengData.bounds[1], self.__rengData.bounds[2], self.__rengData.bounds[3])

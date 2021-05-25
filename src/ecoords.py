@@ -35,7 +35,7 @@ class ECoord:
         self.move       = 0
         self.sorted     = False
         self.rpaths     = False 
-        self.bounds     = (0,0,0,0)
+        self.bounds     = (1e10,-1e10, 1e10, -1e10)
         self.gcode_time = 0
         self.hull_coords= []
         self.n_scanlines= 0
