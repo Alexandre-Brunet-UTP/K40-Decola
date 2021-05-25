@@ -1,6 +1,9 @@
 from __future__ import annotations # Anotations pour le Entity -> return Entity
 from tkinter.constants import NO, SEL
 from ecoords import ECoord
+from numpy import ndarray
+import PIL
+import math
 import copy
 
 
@@ -20,6 +23,17 @@ class AABB : # All unit are expressed in inches
         centerX = self.xmax - self.xmin
         centerY = self.ymax - self.ymin
         return (centerX, centerY)
+
+    def merge(box1 : AABB, box2 : AABB) : 
+        xmin = min(box1.xmin, box2.xmin)
+        xmax = max(box1.xmax, box2.xmax)
+        ymin = min(box1.ymin, box2.ymin)
+        ymax = max(box1.ymax, box2.ymax)
+        return AABB(xmin, xmax, ymin, ymax)
+    
+    def __str__(self):
+     return "[xmin=" + str(self.xmin) + ", xmax=" + str(self.xmax) + ", ymin=" + str(self.ymin) + ", ymax=" + str(self.ymax) + "]"
+
 
 class Entity:
     #   var : Public 
@@ -102,6 +116,9 @@ class Entity:
         assert str != None
         self.__name = name
         
+    def getBounds(self) -> AABB :
+        return self.__bounds
+        
     # x and y in inches
     def setPos(self, x : float, y : float) -> None :
         if x == self.__pos[0] and y == self.__pos[1] : 
@@ -167,6 +184,7 @@ class EntityList:
     __rengData : ECoord
     __vcutData : ECoord
     __vengData : ECoord
+    __bounds : AABB
     __cacheFlag : bool # True : cache need to be updated
 
     def __init__(self) -> None:
@@ -185,6 +203,7 @@ class EntityList:
         self.__rengData = ECoord()
         self.__vcutData = ECoord()
         self.__vengData = ECoord()
+        self.__bounds = AABB(0, 0, 0, 0)
         self.__cacheFlag = False
 
     def getRengData(self) -> ECoord :
@@ -215,13 +234,25 @@ class EntityList:
             self.__rengData.reset()
             self.__vengData.reset()
             self.__vcutData.reset()
+            
+            self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
 
             for entity in self.__entities :
+                print("entity(name=" + entity.getName() + ", bounds=" + str(entity.getBounds()))
+                self.__bounds = AABB.merge(self.__bounds, entity.getBounds())
                 self.__rengData.addEcoord(entity.getRengData())
                 self.__vengData.addEcoord(entity.getVengData())
                 self.__vcutData.addEcoord(entity.getVcutData())
                 entity.resetCacheFlag()
-            
+                
+            ## create picture with pixels in bounds 
+            # picWidth = math.ceil(self.__bounds.xmax * 1000)
+            # picHeight = math.ceil(self.__bounds.ymax * 1000) 
+            # print("creating picture(size=(" + str(picWidth) + ", " + str(picHeight) +"))")
+
+            # picture = [0] * picWidth * picHeight
+            # self.__rengData.image = PIL.Image.frombytes("L", (picWidth, picHeight), bytes(picture))
+
             self.__rengData.computeEcoordsLen()
             self.__vengData.computeEcoordsLen()
             self.__vcutData.computeEcoordsLen()

@@ -138,12 +138,13 @@ class DesignToolPanel:
     def updateUI(self, windowWidth : int, windowHeight : int) :
         refXPos = windowWidth - self.__width
         refYPos = windowHeight - 70
+        entryX = refXPos - 20
 
-        self.__nameEntry.updateUI(xPos=refXPos, yPos=refYPos-190, visible=self.__isVisible)
-        self.__scaleEntry.updateUI(xPos=refXPos, yPos=refYPos-160, visible=self.__isVisible)
-        self.__angleEntry.updateUI(xPos=refXPos, yPos=refYPos-130, visible=self.__isVisible)
-        self.__xPosEntry.updateUI(xPos=refXPos, yPos=refYPos-100, visible=self.__isVisible)
-        self.__yPosEntry.updateUI(xPos=refXPos, yPos=refYPos-70, visible=self.__isVisible)
+        self.__nameEntry.updateUI(xPos=entryX, yPos=refYPos-190, visible=self.__isVisible)
+        self.__scaleEntry.updateUI(xPos=entryX, yPos=refYPos-160, visible=self.__isVisible)
+        self.__angleEntry.updateUI(xPos=entryX, yPos=refYPos-130, visible=self.__isVisible)
+        self.__xPosEntry.updateUI(xPos=entryX, yPos=refYPos-100, visible=self.__isVisible)
+        self.__yPosEntry.updateUI(xPos=entryX, yPos=refYPos-70, visible=self.__isVisible)
         self.__entitiesList.updateUI(xPos=refXPos-35, yPos=50, w=150, h=windowHeight-350, visible=self.__isVisible)
 
         if self.__isVisible :

@@ -875,6 +875,11 @@ class Application(Frame):
         self.VengData = self.entities.getVengData()
         self.RengData = self.entities.getRengData()
         self.VcutgData = self.entities.getVcutData()
+        
+        if (self.RengData.image != None):
+            self.wim, self.him = self.RengData.image.size
+            self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
+            print("raster image size = (" + str(self.wim) + ", " + str(self.him) + ")")
 
 
     def entry_set(self, val2, calc_flag=0, new=0):
@@ -2325,6 +2330,10 @@ class Application(Frame):
         if (self.RengData.image != None):
             self.wim, self.him = self.RengData.image.size
             self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
+            print("raster image size = (" + str(self.wim) + ", " + str(self.him) + ")")
+        else :
+            print("No raster image")
+
             #self.make_raster_coords()
         self.refreshTime()
         margin=0.0625 # A bit of margin to prevent the warningwindow for designs that are close to being within the bounds
@@ -5286,6 +5295,7 @@ class Application(Frame):
         ######################################
         ###       Plot Raster Image        ###
         ######################################
+        print("plot function called")
         if self.RengData.image != None:
             if self.include_Reng.get():   
                 try:
@@ -5295,6 +5305,7 @@ class Application(Frame):
                         nw=int(self.SCALE*self.wim)
                         nh=int(self.SCALE*self.him)
 
+                        print("plotting picture of size=" + str(self.RengData.image.size))
                         plot_im = self.RengData.image.convert("L")                        
 ##                        if self.unsharp_flag.get():
 ##                            from PIL import ImageFilter
