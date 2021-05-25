@@ -5579,7 +5579,7 @@ class Application(Frame):
         ######################################
         ###       Plot Raster Image        ###
         ######################################
-        print("plot function called")
+        
         if self.RengData.image != None:
             
             if self.include_Reng.get():   
@@ -5634,6 +5634,21 @@ class Application(Frame):
         else:
             self.UI_image = None
 
+
+        ######################################
+        ###  Plot selected entity outline  ###
+        ######################################
+        selectedEntity = self.designToolPanel.getSelectedEntity()
+        if selectedEntity != None : 
+            selectBounds : AABB
+            selectBounds = selectedEntity.getBounds()
+                
+            x0 = x_lft + (selectBounds.xmin + XlineShift ) / self.PlotScale 
+            x1 = x_lft + (selectBounds.xmax + XlineShift ) / self.PlotScale
+            y0 = y_top + (selectBounds.ymin + YlineShift ) / self.PlotScale
+            y1 = y_top + (selectBounds.ymax + YlineShift ) / self.PlotScale
+            
+            self.segID.append(self.PreviewCanvas.create_rectangle( x0, y0, x1, y1, outline="green", width = 1))
 
         ######################################
         ###       Plot Reng Coords         ###

@@ -198,6 +198,7 @@ class EntityList:
     def getEntities(self) -> list(Entity) :
         return self.__entities
 
+
     def clear(self) :
         self.__entities = []
         self.__rengData = ECoord()

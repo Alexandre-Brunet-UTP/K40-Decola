@@ -132,6 +132,9 @@ class DesignToolPanel:
 
         self.__entitiesList = EntityListView(self.master, entities, self.__onListChangeCallback)
 
+    def getSelectedEntity(self) -> Entity :
+        return self.__currentEntity
+    
     def setVisible(self, state : bool) -> None :
         self.__isVisible = state
 
@@ -202,6 +205,7 @@ class DesignToolPanel:
             pos = self.__currentEntity.getPos()
             self.__xPosEntry.setText(pos[0])
             self.__yPosEntry.setText(pos[1])
+        self.__refeshCallback()
 
     def __onListChangeCallback(self, event) -> None:
         selection = event.widget.curselection()
