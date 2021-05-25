@@ -66,28 +66,16 @@ class Entity:
 
     def resetTransform(self) -> None :
         self.__updateFlag = True
-        self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
-
-        if(self.__rengData != None) :
-            self.__bounds = AABB(self.__rengData.bounds[0], self.__rengData.bounds[1], self.__rengData.bounds[2], self.__rengData.bounds[3])
-        if(self.__vengData != None) :
-            self.__bounds.xmin = min(self.__bounds.xmin, self.__vengData.bounds[0])
-            self.__bounds.xmax = max(self.__bounds.xmax, self.__vengData.bounds[1])
-            self.__bounds.ymin = min(self.__bounds.ymin, self.__vengData.bounds[2])
-            self.__bounds.ymax = max(self.__bounds.ymax, self.__vengData.bounds[3])
-        if(self.__vcutData != None) :
-            self.__bounds.xmin = min(self.__bounds.xmin, self.__vcutData.bounds[0])
-            self.__bounds.xmax = max(self.__bounds.xmax, self.__vcutData.bounds[1])
-            self.__bounds.ymin = min(self.__bounds.ymin, self.__vcutData.bounds[2])
-            self.__bounds.ymax = max(self.__bounds.ymax, self.__vcutData.bounds[3])
-
-        self.__pos = self.__bounds.getCenter()
-        self.__angle = 0
-        self.__scale = (1, 1)
 
         self.__transformedRengData = None
         self.__transformedVengData = None
         self.__transformedVcutData = None
+        
+        self.__updateBounds()
+
+        self.__pos = (0, 0)
+        self.__angle = 0
+        self.__scale = (1, 1)
 
 
     def resetCacheFlag(self) -> None : 
@@ -144,18 +132,24 @@ class Entity:
         vengData = self.getVengData()
         vcutData = self.getVcutData()
         
+        self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
+
         if(rengData != None) :
             self.__bounds = AABB(rengData.bounds[0], rengData.bounds[1], rengData.bounds[2], rengData.bounds[3])
+            print("reng bounds=" + str(rengData.bounds))
         if(vengData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, vengData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, vengData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, vengData.bounds[2])
             self.__bounds.ymax = max(self.__bounds.ymax, vengData.bounds[3])
+            print("veng bounds=" + str(vengData.bounds))
         if(vcutData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, vcutData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, vcutData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, vcutData.bounds[2])
             self.__bounds.ymax = max(self.__bounds.ymax, vcutData.bounds[3])
+            print("vcut bounds=" + str(vcutData.bounds))
+
 
     def __setTransformedIfEmpty(self) -> None :
         if(self.__transformedRengData == None) : 

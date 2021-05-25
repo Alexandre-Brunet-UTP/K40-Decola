@@ -18,6 +18,8 @@
 from __future__ import annotations
 from math import *
 from tkinter.constants import NO
+import numpy as np
+import datetime
 
 class ECoord:
     def __init__(self):
@@ -93,6 +95,54 @@ class ECoord:
     def set_image(self,PIL_image):
         self.image = PIL_image
         self.reset_path()
+        
+        # image is a greyscale picture
+        if self.image != None :
+            w_px, h_px = self.image.size
+            xmin = self.bounds[0]
+            xmax = self.bounds[1]
+            ymin = self.bounds[2]
+            ymax = self.bounds[3]
+            pixels = np.array(self.image)
+            print("Starting picture parsing")
+            start_time = datetime.datetime.now() 
+            
+            for y_px in range(0, h_px) :
+                y_inch = float(y_px) / 1000.0
+                
+                row = pixels[y_px]
+                
+                #all_white = np.all(row == 255)
+                indices = np.where(row != 255)[0]
+                #print("indices=" + str(indices))
+
+                len_indices = len(indices)
+                if len_indices != 0:
+                    local_xmin_px = indices[0]
+                    #print("len=" + str(len_indices))
+                    #print("minx=" + str(local_xmin_px))
+                    local_xmax_px = indices[len_indices-1]
+                    local_xmin_inch = float(local_xmin_px) / 1000.0
+                    local_xmax_inch = float(local_xmax_px) / 1000.0
+
+                    xmin = min(xmin, local_xmin_inch)
+                    xmax = max(xmax, local_xmax_inch)
+                    ymin = min(ymin, y_inch)
+                    ymax = max(ymax, y_inch)
+                
+                # for x_px in range()
+            end_time = datetime.datetime.now() 
+            print("total time=" + str((end_time-start_time).total_seconds()))
+            height_inch = float(h_px) / 1000.0 
+            tmp_ymin = ymin
+            ymin = height_inch - ymax
+            ymax = height_inch - tmp_ymin
+
+            self.bounds = (xmin, xmax, ymin, ymax)
+            print("picture bounds=" + str(self.bounds))
+
+                
+        
 
     def computeEcoordsLen(self):  
         xmax, ymax = -1e10, -1e10
