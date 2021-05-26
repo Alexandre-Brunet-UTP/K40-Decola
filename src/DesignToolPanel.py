@@ -121,7 +121,7 @@ class DesignToolPanel:
         self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
         
         self.__duplicateButton = Button(self.master,text="Duplicate", command=self.__onDuplicateButton)
-        self.__deleteButton = Button(self.master,text="Delete", bg="light coral", command=self.__onDeleteButton)
+        self.__deleteButton = Button(self.master,text="Delete", command=self.__onDeleteButton) 
         self.__nameEntry = EntryField(name="Name", master=self.master)
         self.__scaleEntry = EntryField(name="Scale", master=self.master, enabled=False)
         self.__angleEntry = EntryField(name="Angle", master=self.master, enabled=False)
