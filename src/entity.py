@@ -190,7 +190,8 @@ class EntityList:
         self.__cacheFlag = True
         
     def deleteEntity(self, entity : Entity) -> None:
-        assert (entity != None)
+        if entity == None :
+            return
         try:
             self.__entities.remove(entity)
             self.__cacheFlag = True
