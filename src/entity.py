@@ -192,11 +192,13 @@ class EntityList:
     def deleteEntity(self, entity : Entity) -> None:
         if entity == None :
             return
-        try:
-            self.__entities.remove(entity)
-            self.__cacheFlag = True
-        except ValueError as e:
-            raise ValueError (e)
+        self.__entities.remove(entity)
+        self.__cacheFlag = True
+            
+    def duplicateEntity(self, entity : Entity) -> None:
+        if entity == None :
+            return
+        self.__entities.append(entity.clone())
 
     def getEntities(self) -> list(Entity) :
         return self.__entities
