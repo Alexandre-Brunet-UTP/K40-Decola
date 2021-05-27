@@ -194,7 +194,8 @@ class EntityList:
             return
         self.__entities.remove(entity)
         self.__cacheFlag = True
-            
+        
+                    
     def duplicateEntity(self, entity : Entity) -> None:
         if entity == None :
             return
