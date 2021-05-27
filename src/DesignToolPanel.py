@@ -171,7 +171,13 @@ class DesignToolPanel:
         return
     
     def __onDeleteButton(self) -> None:
-        return
+        try:
+            self.__entities.deleteEntity(self.__currentEntity)
+            self.__currentEntity = None
+            self.__ecoordCallback()
+            self.__refeshCallback()
+        except ValueError as e:
+            return     
 
 
     #def varCallback(self, varName, index, mode) -> None:

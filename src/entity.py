@@ -188,6 +188,14 @@ class EntityList:
         assert (entity != None) 
         self.__entities.append(entity)
         self.__cacheFlag = True
+        
+    def deleteEntity(self, entity : Entity) -> None:
+        assert (entity != None)
+        try:
+            self.__entities.remove(entity)
+            self.__cacheFlag = True
+        except ValueError as e:
+            raise ValueError (e)
 
     def getEntities(self) -> list(Entity) :
         return self.__entities
