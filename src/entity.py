@@ -190,16 +190,15 @@ class EntityList:
         self.__cacheFlag = True
         
     def deleteEntity(self, entity : Entity) -> None:
-        if entity == None :
-            return
+        assert (entity != None) 
         self.__entities.remove(entity)
         self.__cacheFlag = True
         
                     
     def duplicateEntity(self, entity : Entity) -> None:
-        if entity == None :
-            return
+        assert (entity != None) 
         self.__entities.append(entity.clone())
+        self.__cacheFlag = True
 
     def getEntities(self) -> list(Entity) :
         return self.__entities

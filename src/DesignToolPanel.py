@@ -168,24 +168,29 @@ class DesignToolPanel:
             self.__validateButton.place_forget()
 
     def __onDuplicateButton(self) -> None:
-        self.__entities.duplicateEntity(self.__currentEntity)
-        
-        self.__ecoordCallback()
-        self.__refeshCallback()
-        return
-    
+        if(self.__currentEntity != None):
+            self.__entities.duplicateEntity(self.__currentEntity)
+            
+            self.__ecoordCallback()
+            self.__refeshCallback()
+        else:
+            return
+
     def __onDeleteButton(self) -> None:
-        self.__entities.deleteEntity(self.__currentEntity)
-        self.__currentEntity = None
-        
-        self.__nameEntry.clearText()
-        self.__scaleEntry.clearText()
-        self.__angleEntry.clearText()
-        self.__xPosEntry.clearText()
-        self.__yPosEntry.clearText()
-        
-        self.__ecoordCallback()
-        self.__refeshCallback()   
+        if(self.__currentEntity != None):
+            self.__entities.deleteEntity(self.__currentEntity)
+            self.__currentEntity = None
+            
+            self.__nameEntry.clearText()
+            self.__scaleEntry.clearText()
+            self.__angleEntry.clearText()
+            self.__xPosEntry.clearText()
+            self.__yPosEntry.clearText()
+            
+            self.__ecoordCallback()
+            self.__refeshCallback()   
+        else:
+            return
 
 
     #def varCallback(self, varName, index, mode) -> None:
