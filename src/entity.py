@@ -24,7 +24,7 @@ class AABB : # All unit are expressed in inches
         centerY = self.ymax - self.ymin
         return (centerX, centerY)
 
-    def merge(box1 : AABB, box2 : AABB) : 
+    def merge(box1 : AABB, box2 : AABB) -> AABB : 
         xmin = min(box1.xmin, box2.xmin)
         xmax = max(box1.xmax, box2.xmax)
         ymin = min(box1.ymin, box2.ymin)
@@ -50,16 +50,18 @@ class Entity:
     __transformedVengData : ECoord # Les données de base non transformées
     __transformedVcutData : ECoord # Les données de base non transformées
 
+    __rawBounds : AABB # La taille de la "feuille" du fichier chargé (en pouce)
     __bounds : AABB # L'AABB dde l'entité
     __pos : tuple[float, float] # La position de l'objet en pouces
     __angle : float # La rotation de l'objet en degré
     __scale : tuple[float, float] # L'échelle de l'objet
     __updateFlag : bool
 
-    def __init__(self, reng : ECoord, veng : ECoord, vcut : ECoord) -> None:
+    def __init__(self, reng : ECoord, veng : ECoord, vcut : ECoord, rawBounds : AABB) -> None:
         self.__rengData = reng
         self.__vengData = veng
         self.__vcutData = vcut
+        self.__rawBounds = rawBounds
 
         self.__name = "New Object"
         self.resetTransform()
@@ -106,6 +108,44 @@ class Entity:
         
     def getBounds(self) -> AABB :
         return self.__bounds
+    
+    def getRawBounds(self) -> AABB : 
+        return self.__rawBounds
+    
+    # Update the bounds.
+    # Because the bounds have changed, the ecoords must be moved to match the new bounds
+    # Ecoord pos are relative to the bounds size
+    def updateRawBounds(self, newBounds : AABB) -> None : 
+        assert(newBounds != None)
+        assert (newBounds.xmin == 0)
+        assert (newBounds.ymin == 0)
+        
+        
+        self.__rawBounds.xmax = newBounds.xmax
+        if newBounds.ymax == self.__rawBounds.ymax:
+            print("[Entity \"" + self.__name + "\"] Update bounds ignored")
+            return
+        
+        deltaY = newBounds.ymax - self.__rawBounds.ymax
+        self.__rawBounds.ymax = newBounds.ymax
+        print("[Entity \"" + self.__name + "\"] Update bounds (oldY=" + str(self.__rawBounds.ymax) + ", newY=" + str(newBounds.ymax) + ", dy=" + str(deltaY) + ")")
+
+        
+        if self.__rengData != None : 
+            self.__rengData.moveFnc(0, deltaY)
+        if self.__vengData != None : 
+            self.__vengData.moveFnc(0, deltaY)
+        if self.__vcutData != None:
+            self.__vcutData.moveFnc(0, deltaY)
+        if self.__transformedRengData != None :
+            self.__transformedRengData.moveFnc(0, deltaY)
+        if self.__transformedVengData != None :
+            self.__transformedVengData.moveFnc(0, deltaY)
+        if self.__transformedVcutData != None :
+            self.__transformedVcutData.moveFnc(0, deltaY)
+            
+        self.__updateFlag = True
+        self.__updateBounds()
         
     # x and y in inches
     def setPos(self, x : float, y : float) -> None :
@@ -150,7 +190,6 @@ class Entity:
             self.__bounds.ymax = max(self.__bounds.ymax, vcutData.bounds[3])
             print("vcut bounds=" + str(vcutData.bounds))
 
-
     def __setTransformedIfEmpty(self) -> None :
         if(self.__transformedRengData == None) : 
             self.__transformedRengData = copy.deepcopy(self.__rengData)
@@ -179,14 +218,21 @@ class EntityList:
     __vcutData : ECoord
     __vengData : ECoord
     __bounds : AABB
+    __rawBounds : AABB
     __cacheFlag : bool # True : cache need to be updated
 
     def __init__(self) -> None:
         self.clear()
 
     def addEntity(self, entity : Entity) -> None :
-        assert (entity != None) 
+        assert (entity != None)
+        
+        self.__rawBounds = AABB.merge(self.__rawBounds, entity.getRawBounds())
         self.__entities.append(entity)
+
+        for lentity in self.__entities : 
+            lentity.updateRawBounds(self.__rawBounds)
+        
         self.__cacheFlag = True
 
     def getEntities(self) -> list(Entity) :
@@ -198,7 +244,8 @@ class EntityList:
         self.__rengData = ECoord()
         self.__vcutData = ECoord()
         self.__vengData = ECoord()
-        self.__bounds = AABB(0, 0, 0, 0)
+        self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
+        self.__rawBounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
         self.__cacheFlag = False
 
     def getRengData(self) -> ECoord :
@@ -212,6 +259,9 @@ class EntityList:
     def getVcutData(self) -> ECoord :
         self.__updateCache()
         return self.__vcutData
+    
+    def getSheetBounds(self) -> AABB :
+        return self.__rawBounds
 
     def __updateCacheFlag(self) -> None :
         if(self.__cacheFlag != True) : 
@@ -233,7 +283,7 @@ class EntityList:
             self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
 
             for entity in self.__entities :
-                print("entity(name=" + entity.getName() + ", bounds=" + str(entity.getBounds()))
+                #print("entity(name=" + entity.getName() + ", bounds=" + str(entity.getBounds()))
                 self.__bounds = AABB.merge(self.__bounds, entity.getBounds())
                 self.__rengData.addEcoord(entity.getRengData())
                 self.__vengData.addEcoord(entity.getVengData())

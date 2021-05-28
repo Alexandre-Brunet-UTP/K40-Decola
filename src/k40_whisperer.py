@@ -2457,8 +2457,7 @@ class Application(Frame):
         xmin = 0
         ymin = 0
 
-        self.Design_bounds = (xmin,xmax,ymin,ymax)
-        self.src_Design_bounds = (xmin,xmax,ymin,ymax)
+      
             
         ##########################
         ###   Create ECOORDS   ###
@@ -2482,11 +2481,15 @@ class Application(Frame):
         ##########################
         self.RengData.set_image(svg_reader.raster_PIL)
 
-        entity = Entity(self.RengData, self.VengData, self.VcutData)
+        entity = Entity(self.RengData, self.VengData, self.VcutData, AABB(xmin, xmax, ymin, ymax))
         self.entities.addEntity(entity)
         self.RengData = self.entities.getRengData()
         self.VcutData = self.entities.getVcutData()
         self.VengData = self.entities.getVengData()
+        
+        designBounds = self.entities.getSheetBounds()
+        self.Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        self.src_Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
         
         if (self.RengData.image != None):
             self.wim, self.him = self.RengData.image.size
@@ -5593,7 +5596,7 @@ class Application(Frame):
                         nw=int(self.SCALE*self.wim)
                         nh=int(self.SCALE*self.him)
 
-                        print("plotting picture of size=" + str(self.RengData.image.size))
+                        #print("plotting picture of size=" + str(self.RengData.image.size))
                         plot_im = self.RengData.image.convert("L")                        
 ##                        if self.unsharp_flag.get():
 ##                            from PIL import ImageFilter

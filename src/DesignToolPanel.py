@@ -189,13 +189,12 @@ class DesignToolPanel:
 
     def __selectEntity(self, index : int) -> None :
         if index == None :
-            pass
-           # self.__currentEntity = None
-           # self.__nameEntry.clearText()
-           # self.__scaleEntry.clearText()
-           # self.__angleEntry.clearText()
-            #self.__xPosEntry.clearText()
-            #self.__yPosEntry.clearText()
+            self.__currentEntity = None
+            self.__nameEntry.clearText()
+            self.__scaleEntry.clearText()
+            self.__angleEntry.clearText()
+            self.__xPosEntry.clearText()
+            self.__yPosEntry.clearText()
         else :
             entity : Entity
             entity = self.__entities.getEntities()[index]
@@ -212,5 +211,3 @@ class DesignToolPanel:
         if selection:
             index = selection[0]
             self.__selectEntity(index)
-        else:
-            self.__selectEntity(None)
