@@ -234,6 +234,20 @@ class EntityList:
             lentity.updateRawBounds(self.__rawBounds)
         
         self.__cacheFlag = True
+        
+    #remove the entity given in argument from the list
+    # entity : Entity -> entity to be removed from the list    
+    def deleteEntity(self, entity : Entity) -> None:
+        assert (entity != None) 
+        self.__entities.remove(entity)
+        self.__cacheFlag = True
+                      
+    #create a duplicate of the entity given in argument and append it at the end of the list
+    # entity : Entity -> entity to be duplicated
+    def duplicateEntity(self, entity : Entity) -> None:
+        assert (entity != None) 
+        self.__entities.append(entity.clone())
+        self.__cacheFlag = True
 
     def getEntities(self) -> list(Entity) :
         return self.__entities

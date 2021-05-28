@@ -85,6 +85,8 @@ class DesignToolPanel:
 
     __entities : EntityList
     __currentEntity : Entity
+    __duplicateButton : Button
+    __deleteButton : Button
     __nameEntry : EntryField
     __scaleEntry : EntryField
     __angleEntry : EntryField
@@ -118,6 +120,8 @@ class DesignToolPanel:
         # Gestion de l'angle et de la psoition du dessin en X et Y
         self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
         
+        self.__duplicateButton = Button(self.master,text="Duplicate", command=self.__onDuplicateButton)
+        self.__deleteButton = Button(self.master,text="Delete", command=self.__onDeleteButton) 
         self.__nameEntry = EntryField(name="Name", master=self.master)
         self.__scaleEntry = EntryField(name="Scale", master=self.master, enabled=False)
         self.__angleEntry = EntryField(name="Angle", master=self.master, enabled=False)
@@ -148,9 +152,11 @@ class DesignToolPanel:
         self.__angleEntry.updateUI(xPos=entryX, yPos=refYPos-130, visible=self.__isVisible)
         self.__xPosEntry.updateUI(xPos=entryX, yPos=refYPos-100, visible=self.__isVisible)
         self.__yPosEntry.updateUI(xPos=entryX, yPos=refYPos-70, visible=self.__isVisible)
-        self.__entitiesList.updateUI(xPos=refXPos-35, yPos=50, w=150, h=windowHeight-350, visible=self.__isVisible)
+        self.__entitiesList.updateUI(xPos=refXPos-35, yPos=50, w=150, h=windowHeight-370, visible=self.__isVisible)
 
         if self.__isVisible :
+            self.__duplicateButton.place(x=refXPos-70, y=refYPos-230, width=95, height=30)
+            self.__deleteButton.place(x=refXPos+35, y=refYPos-230, width=95, height=30)
             self.__title.place(x=refXPos, y=10)
             self.__hidePannelButton.place (x=refXPos-70, y=refYPos, width=200, height=30)
             self.__cancelButton.place (x=refXPos+35, y=refYPos-35, width=95, height=30)
@@ -161,6 +167,32 @@ class DesignToolPanel:
             self.__cancelButton.place_forget()
             self.__validateButton.place_forget()
 
+    #create a perfect duplicate of the seleted entity and add it to the end of the list
+    def __onDuplicateButton(self) -> None:
+        if(self.__currentEntity != None):
+            self.__entities.duplicateEntity(self.__currentEntity)
+            
+            self.__ecoordCallback()
+            self.__refeshCallback()
+        else:
+            return
+
+    #remove the selected entity from the list and clear the fields 
+    def __onDeleteButton(self) -> None:
+        if(self.__currentEntity != None):
+            self.__entities.deleteEntity(self.__currentEntity)
+            self.__currentEntity = None
+            
+            self.__nameEntry.clearText()
+            self.__scaleEntry.clearText()
+            self.__angleEntry.clearText()
+            self.__xPosEntry.clearText()
+            self.__yPosEntry.clearText()
+            
+            self.__ecoordCallback()
+            self.__refeshCallback()   
+        else:
+            return
 
 
     #def varCallback(self, varName, index, mode) -> None:
