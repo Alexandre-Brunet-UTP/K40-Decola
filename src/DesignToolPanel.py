@@ -167,6 +167,7 @@ class DesignToolPanel:
             self.__cancelButton.place_forget()
             self.__validateButton.place_forget()
 
+    #create a perfect duplicate of the seleted entity and add it to the end of the list
     def __onDuplicateButton(self) -> None:
         if(self.__currentEntity != None):
             self.__entities.duplicateEntity(self.__currentEntity)
@@ -176,6 +177,7 @@ class DesignToolPanel:
         else:
             return
 
+    #remove the selected entity from the list and clear the fields 
     def __onDeleteButton(self) -> None:
         if(self.__currentEntity != None):
             self.__entities.deleteEntity(self.__currentEntity)
