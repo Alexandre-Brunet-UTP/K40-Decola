@@ -131,7 +131,6 @@ class Application(Frame):
     def __init__(self, master):
         self.trace_window = toplevel_dummy()
         self.entities = EntityList()
-        self.designToolPanel = DesignToolPanel(master, self.entities, self.Hide_Design_Tool, self.menu_View_Refresh, self.__updateEcoords)
         Frame.__init__(self, master)
         self.w = 780
         self.h = 490
@@ -139,8 +138,9 @@ class Application(Frame):
         self.master = master
         self.x = -1
         self.y = -1
-        self.createWidgets()
         self.micro = False
+        self.designToolPanel = DesignToolPanel(master, self.entities, self.Hide_Design_Tool, self.menu_View_Refresh, self.__updateEcoords)
+        self.createWidgets()
         self.menu_View_Refresh()
 
     def resetPath(self):
@@ -686,12 +686,12 @@ class Application(Frame):
         self.separator_adv2 = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
 
         self.Label_Mirror_adv = Label(self.master,text="Mirror Design")
-        self.Checkbutton_Mirror_adv = Checkbutton(self.master,text=" ", anchor=W)
+        self.Checkbutton_Mirror_adv = Checkbutton(self.master,text=" ", anchor=W, state="disabled")
         self.Checkbutton_Mirror_adv.configure(variable=self.mirror)
         self.mirror.trace_variable("w", self.View_Refresh_and_Reset_RasterPath)
 
         self.Label_Rotate_adv = Label(self.master,text="Rotate Design")
-        self.Checkbutton_Rotate_adv = Checkbutton(self.master,text=" ", anchor=W)
+        self.Checkbutton_Rotate_adv = Checkbutton(self.master,text=" ", anchor=W, state="disabled")
         self.Checkbutton_Rotate_adv.configure(variable=self.rotate)
         self.rotate.trace_variable("w", self.View_Refresh_and_Reset_RasterPath)
 
@@ -790,9 +790,9 @@ class Application(Frame):
         top_File.add("command", label = "Read Settings File", command = self.menu_File_Open_Settings_File)
 
         top_File.add_separator()
-        top_File.add("command", label = "Open Design (SVG/DXF/G-Code)"  , command = self.menu_File_Open_Design)
+        top_File.add("command", label = "Open Design (SVG)"  , command = self.menu_File_Open_Design)
         top_File.add("command", label = "Append Design (SVG)"  , command = self.menu_File_Append_Design)
-        top_File.add("command", label  = "Load Design with filling", command = self.menu_File_Open_File_with_Filling)
+        #top_File.add("command", label  = "Load Design with filling", command = self.menu_File_Open_File_with_Filling)
         top_File.add("command", label = "Reload Design"          , command = self.menu_Reload_Design)
 
         top_File.add_separator()    
@@ -846,7 +846,7 @@ class Application(Frame):
         top_Tools.add("command", label = "Calculate Raster Time", command = self.menu_Calc_Raster_Time)
         top_Tools.add("command", label = "Trace Design Boundary <Ctrl-t>", command = self.TRACE_Settings_Window)
         top_Tools.add_separator()
-        top_Tools.add("command", label = "Fill with design", command = self.menu_filling    )
+        top_Tools.add("command", label = "Fill with design", command = self.menu_filling, state="disabled")
         top_Tools.add_separator()
         top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_hardware)
 
@@ -1909,13 +1909,7 @@ class Application(Frame):
         else:
             default_types = design_types
         
-        fileselect = askopenfilename(filetypes=[default_types,
-                                            ("G-Code Files ", ("*.ngc","*.gcode","*.g","*.tap")),\
-                                            ("DXF Files ","*.dxf"),\
-                                            ("SVG Files ","*.svg"),\
-                                            ("All Files ","*"),\
-                                            ("Design Files ", ("*.svg","*.dxf"))],\
-                                            initialdir=init_dir)
+        fileselect = askopenfilename(filetypes=[("Design Files ", "*.svg")], initialdir=init_dir)
 
         if fileselect == () or (not os.path.isfile(fileselect)):
             return
@@ -2376,10 +2370,24 @@ class Application(Frame):
         ##########################
         self.RengData.set_image(svg_reader.raster_PIL)
         
-        if (self.RengData.image != None):
     
+        entity = Entity(self.RengData, self.VengData, self.VcutData, AABB(xmin, xmax, ymin, ymax))
+        self.entities.clear()
+        self.designToolPanel.clearSelect()
+        
+        self.entities.addEntity(entity)
+        self.RengData = self.entities.getRengData()
+        self.VcutData = self.entities.getVcutData()
+        self.VengData = self.entities.getVengData()
+        
+        designBounds = self.entities.getSheetBounds()
+        self.Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        self.src_Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        
+        if (self.RengData.image != None):
             self.wim, self.him = self.RengData.image.size
             self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
+            
             #self.make_raster_coords()
         self.refreshTime()
         margin=0.0625 # A bit of margin to prevent the warningwindow for designs that are close to being within the bounds
