@@ -258,8 +258,11 @@ class ECoord:
         for i in range(0, ecoordSize) : 
             self.ecoords[i][0] += x
             self.ecoords[i][1] += y
+            
+        self.bounds = (self.bounds[0]+x, self.bounds[1]+x, self.bounds[2]+y, self.bounds[3]+y)
+
                 
-        self.computeEcoordsLen()
+        #self.computeEcoordsLen()
                 
             
             

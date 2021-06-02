@@ -176,19 +176,16 @@ class Entity:
 
         if(rengData != None) :
             self.__bounds = AABB(rengData.bounds[0], rengData.bounds[1], rengData.bounds[2], rengData.bounds[3])
-            print("reng bounds=" + str(rengData.bounds))
         if(vengData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, vengData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, vengData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, vengData.bounds[2])
             self.__bounds.ymax = max(self.__bounds.ymax, vengData.bounds[3])
-            print("veng bounds=" + str(vengData.bounds))
         if(vcutData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, vcutData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, vcutData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, vcutData.bounds[2])
             self.__bounds.ymax = max(self.__bounds.ymax, vcutData.bounds[3])
-            print("vcut bounds=" + str(vcutData.bounds))
 
     def __setTransformedIfEmpty(self) -> None :
         if(self.__transformedRengData == None) : 
@@ -296,21 +293,53 @@ class EntityList:
             
             self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
 
+            ## create picture with pixels in bounds 
+        
+
+            #picture = [255] * picWidth * picHeight
+            deltaY = 0
+            for entity in self.__entities :
+                deltaY = min(deltaY, entity.getBounds().ymin)
+                self.__rawBounds.xmax = max(self.__rawBounds.xmax, entity.getBounds().xmax)
+            self.__rawBounds.ymax -= deltaY
+  
+            for entity in self.__entities :
+                entity.updateRawBounds(self.__rawBounds)    
+            
+            print("[Design] bounds="+ str(self.__rawBounds))
+            picWidth = math.ceil(self.__rawBounds.xmax * 1000)
+            picHeight = math.ceil(self.__rawBounds.ymax * 1000) 
+            picture = PIL.Image.new("L", (picWidth, picHeight), (100))
+            print("creating picture(size=(" + str(picWidth) + ", " + str(picHeight) +"))")    
+            
             for entity in self.__entities :
                 #print("entity(name=" + entity.getName() + ", bounds=" + str(entity.getBounds()))
-                self.__bounds = AABB.merge(self.__bounds, entity.getBounds())
+                ## Process the picture 
+                im = entity.getRengData().image
+                if im != None :
+                    entityPos = entity.getPos()
+                    imWidth, imHeight = im.size
+                    left = math.ceil(entityPos[0] * 1000)
+                    up = -math.ceil(entityPos[1] * 1000)
+                    right = left + imWidth
+                    down = up + imHeight
+                    region = (left, up, right, down)
+                    #print("Entity \"" + entity.getName() + "\" image copied to " + str(region))
+                    picture.paste(im, (left, up))
+
+                
+                ## End picture process
+                
+                
                 self.__rengData.addEcoord(entity.getRengData())
                 self.__vengData.addEcoord(entity.getVengData())
                 self.__vcutData.addEcoord(entity.getVcutData())
                 entity.resetCacheFlag()
                 
-            ## create picture with pixels in bounds 
-            # picWidth = math.ceil(self.__bounds.xmax * 1000)
-            # picHeight = math.ceil(self.__bounds.ymax * 1000) 
-            # print("creating picture(size=(" + str(picWidth) + ", " + str(picHeight) +"))")
+                
+            #self.__rengData.image = PIL.Image.frombytes("L", (picWidth, picHeight), bytes(picture))
+            self.__rengData.image = picture
 
-            # picture = [0] * picWidth * picHeight
-            # self.__rengData.image = PIL.Image.frombytes("L", (picWidth, picHeight), bytes(picture))
 
             self.__rengData.computeEcoordsLen()
             self.__vengData.computeEcoordsLen()

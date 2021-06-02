@@ -921,6 +921,10 @@ class Application(Frame):
         self.RengData = self.entities.getRengData()
         self.VcutgData = self.entities.getVcutData()
         
+        designBounds = self.entities.getSheetBounds()
+        self.Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        self.src_Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        
         if (self.RengData.image != None):
             self.wim, self.him = self.RengData.image.size
             self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
@@ -4679,8 +4683,8 @@ class Application(Frame):
         self.Master_Configure2(dummy_event,1)
     
         self.posGoScale = []
-        self.clean_list()
-        self.Plot_Data()
+        #self.clean_list()
+        #self.Plot_Data()
         xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
         W = xmax-xmin
         H = ymax-ymin
@@ -4709,8 +4713,8 @@ class Application(Frame):
                                   U_display))
 
         self.statusbar.configure( bg = 'white' )
-        self.Master_Configure(dummy_event,1)
-        self.Master_Configure2(dummy_event,1)
+        #self.Master_Configure(dummy_event,1)
+        #self.Master_Configure2(dummy_event,1)
         
     def menu_Inside_First_Callback(self, varName, index, mode):
         if self.GcodeData.ecoords != []:
@@ -5595,17 +5599,16 @@ class Application(Frame):
         ######################################
         
         if self.RengData.image != None:
-            
             if self.include_Reng.get():   
                 try:
                     new_SCALE = (1.0/self.PlotScale)/self.input_dpi
-                    if new_SCALE != self.SCALE:
-                        self.SCALE = new_SCALE
-                        nw=int(self.SCALE*self.wim)
-                        nh=int(self.SCALE*self.him)
+                    #if new_SCALE != self.SCALE:
+                    self.SCALE = new_SCALE
+                    nw=int(self.SCALE*self.wim)
+                    nh=int(self.SCALE*self.him)
 
-                        #print("plotting picture of size=" + str(self.RengData.image.size))
-                        plot_im = self.RengData.image.convert("L")                        
+                    print("plotting picture of size=" + str(self.RengData.image.size))
+                    plot_im = self.RengData.image.convert("L")                        
 ##                        if self.unsharp_flag.get():
 ##                            from PIL import ImageFilter
 ##                            filter = ImageFilter.UnsharpMask()
@@ -5614,26 +5617,26 @@ class Application(Frame):
 ##                            filter.threshold = int(float(self.unsharp_t.get()))
 ##                            plot_im = plot_im.filter(filter)
                         
-                        if self.negate.get():
-                            plot_im = ImageOps.invert(plot_im)
+                    if self.negate.get():
+                        plot_im = ImageOps.invert(plot_im)
 
-                        if self.halftone.get() == False:
-                            plot_im = plot_im.point(lambda x: 0 if x<128 else 255, '1')
-                            plot_im = plot_im.convert("L")
+                    if self.halftone.get() == False:
+                        plot_im = plot_im.point(lambda x: 0 if x<128 else 255, '1')
+                        plot_im = plot_im.convert("L")
 
-                        if self.mirror.get():
-                            plot_im = ImageOps.mirror(plot_im)
+                    if self.mirror.get():
+                        plot_im = ImageOps.mirror(plot_im)
+                    
+                    if self.rotate.get():
+                        plot_im = plot_im.rotate(180,expand=True)
+                        nh=int(self.SCALE*self.wim)
+                        nw=int(self.SCALE*self.him)
                         
-                        if self.rotate.get():
-                            plot_im = plot_im.rotate(180,expand=True)
-                            nh=int(self.SCALE*self.wim)
-                            nw=int(self.SCALE*self.him)
-                            
-                        try:
-                            self.UI_image = ImageTk.PhotoImage(plot_im.resize((nw,nh), Image.ANTIALIAS))
-                        except:
-                            debug_message("Imaging_Free Used.")
-                            self.UI_image = self.Imaging_Free(plot_im.resize((nw,nh), Image.ANTIALIAS))
+                    try:
+                        self.UI_image = ImageTk.PhotoImage(plot_im.resize((nw,nh), Image.ANTIALIAS))
+                    except:
+                        debug_message("Imaging_Free Used.")
+                        self.UI_image = self.Imaging_Free(plot_im.resize((nw,nh), Image.ANTIALIAS))
                 except:
                     self.SCALE = 1
                     debug_message(traceback.format_exc())
