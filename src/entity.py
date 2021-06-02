@@ -335,14 +335,26 @@ class EntityList:
                 im = entity.getRengData().image
                 if im != None and picture != None:
                     entityPos = entity.getPos()
+                    entityBounds = entity.getBounds()
+                    
                     imWidth, imHeight = im.size
-                    left = math.ceil(entityPos[0] * 1000)
+                    
+                    pasteUp_px = math.ceil((self.__rawBounds.ymax - entityBounds.ymax) * 1000)
+                
+                    
+                    cropLeft = math.ceil((entityBounds.xmin-entityPos[0]) * 1000)
+                    cropRight = math.ceil((entityBounds.xmax-entityPos[0]) * 1000)
+                    cropUp_px = pasteUp_px + math.ceil(entityPos[1] * 1000)
+                    cropDown_px = cropUp_px + math.ceil((entityBounds.ymax-entityBounds.ymin) * 1000)
+                    
+                    pasteLeft = math.ceil(entityBounds.xmin * 1000)
                     up = -math.ceil(entityPos[1] * 1000)
-                    right = left + imWidth
-                    down = up + imHeight
-                    region = (left, up, right, down)
+                    
+                    cropRegion = (cropLeft, cropUp_px, cropRight, cropDown_px)
+                    #region = (left, up, right, down)
+                    crop = im.crop(cropRegion)
                     #print("Entity \"" + entity.getName() + "\" image copied to " + str(region))
-                    picture.paste(im, (left, up))
+                    picture.paste(crop, (pasteLeft, pasteUp_px))
 
                 
                 ## End picture process
