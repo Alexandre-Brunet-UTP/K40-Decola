@@ -5602,41 +5602,41 @@ class Application(Frame):
             if self.include_Reng.get():   
                 try:
                     new_SCALE = (1.0/self.PlotScale)/self.input_dpi
-                    #if new_SCALE != self.SCALE:
-                    self.SCALE = new_SCALE
-                    nw=int(self.SCALE*self.wim)
-                    nh=int(self.SCALE*self.him)
-
-                    print("plotting picture of size=" + str(self.RengData.image.size))
-                    plot_im = self.RengData.image.convert("L")                        
-##                        if self.unsharp_flag.get():
-##                            from PIL import ImageFilter
-##                            filter = ImageFilter.UnsharpMask()
-##                            filter.radius    = float(self.unsharp_r.get())
-##                            filter.percent   = int(float(self.unsharp_p.get()))
-##                            filter.threshold = int(float(self.unsharp_t.get()))
-##                            plot_im = plot_im.filter(filter)
+                    if new_SCALE != self.SCALE or self.entities.getRasterFlag():
+                        self.SCALE = new_SCALE
+                        nw=int(self.SCALE*self.wim)
+                        nh=int(self.SCALE*self.him)
+    
+                        print("plotting picture of size=" + str(self.RengData.image.size))
+                        plot_im = self.RengData.image.convert("L")                        
+    ##                        if self.unsharp_flag.get():
+    ##                            from PIL import ImageFilter
+    ##                            filter = ImageFilter.UnsharpMask()
+    ##                            filter.radius    = float(self.unsharp_r.get())
+    ##                            filter.percent   = int(float(self.unsharp_p.get()))
+    ##                            filter.threshold = int(float(self.unsharp_t.get()))
+    ##                            plot_im = plot_im.filter(filter)
+                            
+                        if self.negate.get():
+                            plot_im = ImageOps.invert(plot_im)
+    
+                        if self.halftone.get() == False:
+                            plot_im = plot_im.point(lambda x: 0 if x<128 else 255, '1')
+                            plot_im = plot_im.convert("L")
+    
+                        if self.mirror.get():
+                            plot_im = ImageOps.mirror(plot_im)
                         
-                    if self.negate.get():
-                        plot_im = ImageOps.invert(plot_im)
-
-                    if self.halftone.get() == False:
-                        plot_im = plot_im.point(lambda x: 0 if x<128 else 255, '1')
-                        plot_im = plot_im.convert("L")
-
-                    if self.mirror.get():
-                        plot_im = ImageOps.mirror(plot_im)
-                    
-                    if self.rotate.get():
-                        plot_im = plot_im.rotate(180,expand=True)
-                        nh=int(self.SCALE*self.wim)
-                        nw=int(self.SCALE*self.him)
-                        
-                    try:
-                        self.UI_image = ImageTk.PhotoImage(plot_im.resize((nw,nh), Image.ANTIALIAS))
-                    except:
-                        debug_message("Imaging_Free Used.")
-                        self.UI_image = self.Imaging_Free(plot_im.resize((nw,nh), Image.ANTIALIAS))
+                        if self.rotate.get():
+                            plot_im = plot_im.rotate(180,expand=True)
+                            nh=int(self.SCALE*self.wim)
+                            nw=int(self.SCALE*self.him)
+                            
+                        try:
+                            self.UI_image = ImageTk.PhotoImage(plot_im.resize((nw,nh), Image.ANTIALIAS))
+                        except:
+                            debug_message("Imaging_Free Used.")
+                            self.UI_image = self.Imaging_Free(plot_im.resize((nw,nh), Image.ANTIALIAS))
                 except:
                     self.SCALE = 1
                     debug_message(traceback.format_exc())

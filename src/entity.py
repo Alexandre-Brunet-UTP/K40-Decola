@@ -217,6 +217,7 @@ class EntityList:
     __bounds : AABB
     __rawBounds : AABB
     __cacheFlag : bool # True : cache need to be updated
+    __rasterFlag : bool
 
     def __init__(self) -> None:
         self.clear()
@@ -258,6 +259,7 @@ class EntityList:
         self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
         self.__rawBounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
         self.__cacheFlag = False
+        self.__rasterFlag = True
 
     def getRengData(self) -> ECoord :
         self.__updateCache()
@@ -280,6 +282,11 @@ class EntityList:
                 if entity.getUpdateFlag() :
                     self.__cacheFlag = True
                     break
+
+    def getRasterFlag(self) -> bool :
+        flag = self.__rasterFlag
+        self.__rasterFlag = False 
+        return flag
 
 
     def __updateCache(self) -> None :
@@ -347,4 +354,5 @@ class EntityList:
             self.__vcutData.computeEcoordsLen()
         
             self.__cacheFlag = False
+            self.__rasterFlag = True
     
