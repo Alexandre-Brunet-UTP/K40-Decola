@@ -214,7 +214,7 @@ class EntityList:
     __rengData : ECoord
     __vcutData : ECoord
     __vengData : ECoord
-    __bounds : AABB
+   # __bounds : AABB
     __rawBounds : AABB
     __cacheFlag : bool # True : cache need to be updated
     __rasterFlag : bool
@@ -256,7 +256,7 @@ class EntityList:
         self.__rengData = ECoord()
         self.__vcutData = ECoord()
         self.__vengData = ECoord()
-        self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
+        #self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
         self.__rawBounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
         self.__cacheFlag = False
         self.__rasterFlag = True
@@ -298,33 +298,42 @@ class EntityList:
             self.__vengData.reset()
             self.__vcutData.reset()
             
-            self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
+        #self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
 
             ## create picture with pixels in bounds 
         
 
             #picture = [255] * picWidth * picHeight
             deltaY = 0
+
+            bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
+
             for entity in self.__entities :
-                deltaY = min(deltaY, entity.getBounds().ymin)
-                self.__rawBounds.xmax = max(self.__rawBounds.xmax, entity.getBounds().xmax)
-            self.__rawBounds.ymax -= deltaY
+                bounds = AABB.merge(bounds, entity.getBounds())
+                #deltaY = min(deltaY, entity.getBounds().ymin)
+                #self.__rawBounds.xmax = max(self.__rawBounds.xmax, entity.getBounds().xmax)
+            
+            self.__rawBounds.ymax -= bounds.ymin
+            self.__rawBounds.xmax = bounds.xmax
   
     
             for entity in self.__entities :
                 entity.updateRawBounds(self.__rawBounds)    
             
             print("[Design] bounds="+ str(self.__rawBounds))
-            picWidth = math.ceil(self.__rawBounds.xmax * 1000)
-            picHeight = math.ceil(self.__rawBounds.ymax * 1000) 
-            picture = PIL.Image.new("L", (picWidth, picHeight), (255))
-            print("creating picture(size=(" + str(picWidth) + ", " + str(picHeight) +"))")    
+            picWidth = max(math.ceil(self.__rawBounds.xmax * 1000), 0)
+            picHeight = max(math.ceil(self.__rawBounds.ymax * 1000), 0)
+        
+            enablePicture = (picWidth != 0 and picHeight != 0)
+            
+            picture = PIL.Image.new("L", (picWidth, picHeight), (255)) if enablePicture else None
+            #print("creating picture(size=(" + str(picWidth) + ", " + str(picHeight) +"))")    
             
             for entity in self.__entities :
                 #print("entity(name=" + entity.getName() + ", bounds=" + str(entity.getBounds()))
                 ## Process the picture 
                 im = entity.getRengData().image
-                if im != None :
+                if im != None and picture != None:
                     entityPos = entity.getPos()
                     imWidth, imHeight = im.size
                     left = math.ceil(entityPos[0] * 1000)
