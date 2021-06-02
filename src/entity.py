@@ -303,13 +303,14 @@ class EntityList:
                 self.__rawBounds.xmax = max(self.__rawBounds.xmax, entity.getBounds().xmax)
             self.__rawBounds.ymax -= deltaY
   
+    
             for entity in self.__entities :
                 entity.updateRawBounds(self.__rawBounds)    
             
             print("[Design] bounds="+ str(self.__rawBounds))
             picWidth = math.ceil(self.__rawBounds.xmax * 1000)
             picHeight = math.ceil(self.__rawBounds.ymax * 1000) 
-            picture = PIL.Image.new("L", (picWidth, picHeight), (100))
+            picture = PIL.Image.new("L", (picWidth, picHeight), (255))
             print("creating picture(size=(" + str(picWidth) + ", " + str(picHeight) +"))")    
             
             for entity in self.__entities :
