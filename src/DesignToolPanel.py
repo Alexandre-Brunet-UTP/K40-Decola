@@ -173,18 +173,17 @@ class DesignToolPanel:
         if(self.__currentEntity != None):
             Xoffset : float
             Yoffset : float
-            Xoffset = self.__currentEntity.getBounds().xmax #- self.__currentEntity.getBounds().xmin
-            Yoffset = self.__currentEntity.getBounds().ymax #- self.__currentEntity.getBounds().ymin
+            Xoffset = self.__currentEntity.getBounds().xmax - self.__currentEntity.getPos()[0]
+            Yoffset = self.__currentEntity.getBounds().ymax #- self.__currentEntity.getPos()[1]
             x : int
             y : int
-            x = floor(Width/Xoffset)
-            y = floor(abs(Height/Yoffset))
+            x = floor((Width- self.__currentEntity.getPos()[0])/Xoffset)
+            y = floor(abs((Height- self.__currentEntity.getPos()[1])/Yoffset))
             print("============================")
             print("filling stat: x=" + str(x) + " y=" + str(y) )
-            print("              Yoff=" + str(Yoffset) + " Xoff=" + str(Xoffset) )
+            print("              Yoff=" + str(Yoffset)+ "(" + str(self.__currentEntity.getPos()[1]) + ")" + " Xoff=" + str(Xoffset) )
             print("              height=" + str(Height) + " width=" + str(Width) )
             print("============================")
-            
             for j in range(1,x):
                     self.__entities.duplicateEntity(self.__currentEntity)
                     self.__entities.getEntities()[-1].setPos(self.__currentEntity.getPos()[0] + Xoffset*j, self.__currentEntity.getPos()[1])

@@ -825,7 +825,7 @@ class Application(Frame):
         top_Tools.add("command", label = "Calculate Raster Time", command = self.menu_Calc_Raster_Time)
         top_Tools.add("command", label = "Trace Design Boundary <Ctrl-t>", command = self.TRACE_Settings_Window)
         top_Tools.add_separator()
-        top_Tools.add("command", label = "Fill with design", command = self.menu_filling, state="disabled")
+        top_Tools.add("command", label = "Fill with design", command = self.menu_filling)
         top_Tools.add_separator()
         top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_hardware)
         top_Tools.add("command", label = "Go scale software", command = self.menu_Tool_Open_Go_Scale_Software)
