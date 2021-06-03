@@ -174,7 +174,7 @@ class Application(Frame):
         self.k40 = None
         self.run_time = 0
         
-        self.master.bind("<Configure>", self.Master_Configure)
+        self.master.bind("<Configure>", self.Master_Configure2)
         self.master.bind('<Enter>', self.bindConfigure)
         self.master.bind('<F1>', self.KEY_F1)
         self.master.bind('<F2>', self.KEY_F2)
@@ -4666,6 +4666,7 @@ class Application(Frame):
         dummy_event = Event()
         dummy_event.widget=self.master
         self.Master_Configure(dummy_event,1)
+        self.Master_Configure2(dummy_event,1)
     
         self.posGoScale = []
         xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
@@ -4708,6 +4709,7 @@ class Application(Frame):
         dummy_event = Event()
         dummy_event.widget=self.master
         self.Master_Configure(dummy_event,1)
+        self.Master_Configure2(dummy_event,1)
 
     def menu_Calc_Raster_Time(self,event=None):
         self.set_gui("disabled")
@@ -5269,7 +5271,8 @@ class Application(Frame):
                     self.PreviewCanvas.configure( width = self.w-240, height = self.h-50 )
                     self.PreviewCanvas_frame.place(x=Xvert_sep, y=10)
                     self.separator_vert.place_forget()
-        self.Master_Configure2(event)        
+
+            
                     
                     
                     
