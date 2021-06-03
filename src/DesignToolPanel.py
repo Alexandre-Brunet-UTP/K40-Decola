@@ -177,15 +177,18 @@ class DesignToolPanel:
             x : int
             y : int
             x = floor(Width/Xoffset)
-            y = abs(floor(Height/Yoffset))
-            
-            print("filling stat: ymax=" + str(self.__currentEntity.getBounds().ymax) + " ymin=" + str(self.__currentEntity.getBounds().ymin) )
+            y = floor(abs(Height/Yoffset))
+            print("============================")
+            print("filling stat: x=" + str(x) + " y=" + str(y) )
+            print("              Yoff=" + str(Yoffset) + " Xoff=" + str(Xoffset) )
+            print("              height=" + str(Height) + " width=" + str(Width) )
+            print("============================")
             
             for j in range(1,x):
                     self.__entities.duplicateEntity(self.__currentEntity)
-                    self.__entities.getEntities()[-1].setPos(self.__currentEntity.getPos()[0] + Xoffset*j, 0)
+                    self.__entities.getEntities()[-1].setPos(self.__currentEntity.getPos()[0] + Xoffset*j, self.__currentEntity.getPos()[1])
                     self.__entities.getEntities()[-1].setName(self.__currentEntity.getName() + "_" + str(j))
-            for i in range(1,y-1):
+            for i in range(1,y):
                 for j in range(0,x):
                     self.__entities.duplicateEntity(self.__currentEntity)
                     self.__entities.getEntities()[-1].setPos(self.__currentEntity.getPos()[0] + Xoffset*j, self.__currentEntity.getPos()[1] + (-1)*Yoffset*i)
