@@ -2,6 +2,7 @@ from tkinter import *
 from typing import Callable
 from entity import EntityList
 from entity import Entity
+from math import *
 
 class EntryField:
     __label : Label
@@ -166,6 +167,36 @@ class DesignToolPanel:
             self.__hidePannelButton.place_forget()
             self.__cancelButton.place_forget()
             self.__validateButton.place_forget()
+            
+    def fill(self, Width : float, Height : float) :
+        if(self.__currentEntity != None):
+            Xoffset : float
+            Yoffset : float
+            Xoffset = self.__currentEntity.getBounds().xmax #- self.__currentEntity.getBounds().xmin
+            Yoffset = self.__currentEntity.getBounds().ymax #- self.__currentEntity.getBounds().ymin
+            x : int
+            y : int
+            x = floor(Width/Xoffset)
+            y = abs(floor(Height/Yoffset))
+            
+            print("filling stat: ymax=" + str(self.__currentEntity.getBounds().ymax) + " ymin=" + str(self.__currentEntity.getBounds().ymin) )
+            
+            for j in range(1,x):
+                    self.__entities.duplicateEntity(self.__currentEntity)
+                    self.__entities.getEntities()[-1].setPos(self.__currentEntity.getPos()[0] + Xoffset*j, 0)
+                    self.__entities.getEntities()[-1].setName(self.__currentEntity.getName() + "_" + str(j))
+            for i in range(1,y-1):
+                for j in range(0,x):
+                    self.__entities.duplicateEntity(self.__currentEntity)
+                    self.__entities.getEntities()[-1].setPos(self.__currentEntity.getPos()[0] + Xoffset*j, self.__currentEntity.getPos()[1] + (-1)*Yoffset*i)
+                    self.__entities.getEntities()[-1].setName(self.__currentEntity.getName() + "_" + str(j+(i*x)))
+                    
+            self.__ecoordCallback()
+            self.__refeshCallback()
+        else:
+            return
+                
+                
 
     #create a perfect duplicate of the seleted entity and add it to the end of the list
     def __onDuplicateButton(self) -> None:
@@ -238,6 +269,7 @@ class DesignToolPanel:
             self.__xPosEntry.setText(pos[0])
             self.__yPosEntry.setText(pos[1])
         self.__refeshCallback()
+
 
     def __onListChangeCallback(self, event) -> None:
         selection = event.widget.curselection()

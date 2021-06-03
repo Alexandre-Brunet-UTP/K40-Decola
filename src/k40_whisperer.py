@@ -3852,23 +3852,26 @@ class Application(Frame):
     
     def filling(self):
 
-        xmin,xmax,ymin,ymax = self.Get_Src_Design_Bounds()
+        #xmin,xmax,ymin,ymax = self.Get_Src_Design_Bounds()
         
-        #xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
-        #yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        ##xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
+        ##yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
         
-        xmin = min(xmin, min(self.VcutData.src_bounds[0], self.VengData.src_bounds[0]))
-        ymin = min(ymin, min(self.VcutData.src_bounds[2], self.VengData.src_bounds[2]))
-        xmax = max(xmax, max(self.VcutData.src_bounds[1], self.VengData.src_bounds[1]))
-        ymax = max(ymax, max(self.VcutData.src_bounds[3], self.VengData.src_bounds[3]))
+        #xmin = min(xmin, min(self.VcutData.src_bounds[0], self.VengData.src_bounds[0]))
+        #ymin = min(ymin, min(self.VcutData.src_bounds[2], self.VengData.src_bounds[2]))
+        #xmax = max(xmax, max(self.VcutData.src_bounds[1], self.VengData.src_bounds[1]))
+        #ymax = max(ymax, max(self.VcutData.src_bounds[3], self.VengData.src_bounds[3]))
 
         laserX = float(self.LaserXsize.get()) / self.units_scale
         laserY = float(self.LaserYsize.get()) / self.units_scale
 
-        self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
-        self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
-        self.menu_View_Refresh()
+        #self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        #self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        #self.menu_View_Refresh()
     
+        self.designToolPanel.fill(laserX,-laserY)
+        
+        self.menu_View_Refresh()
   
    
     def send_data(self,operation_type=None, laseron = True, output_filename = None):
