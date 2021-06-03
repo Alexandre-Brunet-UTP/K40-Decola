@@ -15,7 +15,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+from __future__ import annotations
 from math import *
+from tkinter.constants import NO
+import numpy as np
+import datetime
 
 class ECoord:
     def __init__(self):
@@ -33,7 +37,7 @@ class ECoord:
         self.move       = 0
         self.sorted     = False
         self.rpaths     = False 
-        self.bounds     = (0,0,0,0)
+        self.bounds     = (1e10,-1e10, 1e10, -1e10)
         self.gcode_time = 0
         self.hull_coords= []
         self.n_scanlines= 0
@@ -91,6 +95,54 @@ class ECoord:
     def set_image(self,PIL_image):
         self.image = PIL_image
         self.reset_path()
+        
+        # image is a greyscale picture
+        if self.image != None :
+            w_px, h_px = self.image.size
+            xmin = self.bounds[0]
+            xmax = self.bounds[1]
+            ymin = self.bounds[2]
+            ymax = self.bounds[3]
+            pixels = np.array(self.image)
+            ##print("Starting picture parsing")
+            start_time = datetime.datetime.now() 
+            
+            for y_px in range(0, h_px) :
+                y_inch = float(y_px) / 1000.0
+                
+                row = pixels[y_px]
+                
+                #all_white = np.all(row == 255)
+                indices = np.where(row != 255)[0]
+                #print("indices=" + str(indices))
+
+                len_indices = len(indices)
+                if len_indices != 0:
+                    local_xmin_px = indices[0]
+                    #print("len=" + str(len_indices))
+                    #print("minx=" + str(local_xmin_px))
+                    local_xmax_px = indices[len_indices-1]
+                    local_xmin_inch = float(local_xmin_px) / 1000.0
+                    local_xmax_inch = float(local_xmax_px) / 1000.0
+
+                    xmin = min(xmin, local_xmin_inch)
+                    xmax = max(xmax, local_xmax_inch)
+                    ymin = min(ymin, y_inch)
+                    ymax = max(ymax, y_inch)
+                
+                # for x_px in range()
+            end_time = datetime.datetime.now() 
+            ##print("total time=" + str((end_time-start_time).total_seconds()))
+            height_inch = float(h_px) / 1000.0 
+            tmp_ymin = ymin
+            ymin = height_inch - ymax
+            ymax = height_inch - tmp_ymin
+
+            self.bounds = (xmin, xmax, ymin, ymax)
+            ##print("picture bounds=" + str(self.bounds))
+
+                
+        
 
     def computeEcoordsLen(self):  
         xmax, ymax = -1e10, -1e10
@@ -102,7 +154,7 @@ class ECoord:
         on = 0
         move = 0
         time = 0
-        for i in range(2,len(self.ecoords)):
+        for i in range(1,len(self.ecoords)):
             x1 = self.ecoords[i-1][0]
             y1 = self.ecoords[i-1][1]
             x2 = self.ecoords[i][0]
@@ -179,4 +231,38 @@ class ECoord:
         return loop
 
 
+    def addEcoord(self, newEcoord : ECoord) -> None :
+        if newEcoord == None :
+            return
 
+        if(newEcoord.image != None) :
+            self.image = newEcoord.image
+
+        loop = 0 
+        ecoordSize = len(self.ecoords)
+        if(ecoordSize != 0) :
+            loop = self.ecoords[ecoordSize-1][2] + 1
+
+        for i in range(0, len(newEcoord.ecoords)) :
+            data = newEcoord.ecoords[i]
+            newData = [data[0], data[1], data[2]+loop]
+
+            self.ecoords.append(newData)
+            self.bounds = (min(newData[0], self.bounds[0]), max(newData[0], self.bounds[1]), min(newData[1], self.bounds[2]), max(newData[1], self.bounds[3]))
+        ## don't compute len to save time
+        # must be called externaly 
+        
+       
+    def moveFnc(self, x : float, y : float) -> None :
+        ecoordSize = len(self.ecoords)
+        for i in range(0, ecoordSize) : 
+            self.ecoords[i][0] += x
+            self.ecoords[i][1] += y
+            
+        self.bounds = (self.bounds[0]+x, self.bounds[1]+x, self.bounds[2]+y, self.bounds[3]+y)
+
+                
+        #self.computeEcoordsLen()
+                
+            
+            

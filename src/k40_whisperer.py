@@ -56,6 +56,14 @@ from svgutils.compose import *
 from time import time, sleep
 from copy import copy, deepcopy
 
+from entity import *
+import svgutils
+from svgutils.compose import *
+from DesignToolPanel import DesignToolPanel
+import time
+from time import time, sleep
+from copy import copy, deepcopy
+
 DEBUG = False
 if DEBUG:
     import inspect
@@ -127,6 +135,7 @@ QUIET = False
 class Application(Frame):
     def __init__(self, master):
         self.trace_window = toplevel_dummy()
+        self.entities = EntityList()
         Frame.__init__(self, master)
         self.w = 780
         self.h = 490
@@ -134,8 +143,10 @@ class Application(Frame):
         self.master = master
         self.x = -1
         self.y = -1
-        self.createWidgets()
         self.micro = False
+
+        self.designToolPanel = DesignToolPanel(master, self.entities, self.Hide_Design_Tool, self.menu_View_Refresh, self.__updateEcoords)
+        self.createWidgets()
         self.menu_View_Refresh()
 
     def resetPath(self):
@@ -280,18 +291,6 @@ class Application(Frame):
         self.jog_step   = StringVar()
         self.rast_step  = StringVar()
         self.funits     = StringVar()
-        
-        self.Name       = StringVar()
-        self.Angle      = StringVar()
-        self.PosX       = StringVar()
-        self.PosY       = StringVar()
-        self.NewName    = StringVar()
-        self.NewAngle      = StringVar()
-        self.NewPosX       = StringVar()
-        self.NewPosY       = StringVar()
-        self.optimization_for_filling = bool()
-        self.Scale=StringVar()
-        
 
         self.bezier_M1     = StringVar()
         self.bezier_M2     = StringVar()
@@ -319,6 +318,7 @@ class Application(Frame):
         self.PositionDotX = 0
         self.PositionDotY = 0
 
+
         self.gotoX = StringVar()
         self.gotoY = StringVar()
 
@@ -330,8 +330,6 @@ class Application(Frame):
         self.check = BooleanVar()
         self.YMAX = 0
       
-
-        
         self.Write_In_File= BooleanVar()
     
         
@@ -649,64 +647,6 @@ class Application(Frame):
         ###########################################################################
         # End Left Column #
 
-
-
-
-
-
-
-        # Design Tool Settings Column    #
-        self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
-        self.Label_Design_Tool = Label(self.master,text="Design Tool Settings",anchor=CENTER)
-
-
-        #cacher le menu vertical de Design tool settings
-        self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
-
-        # Gestion de l'angle et de la psoition du dessin en X et Y
-        self.separator_comb = Frame(self.master, height=2, bd=1, relief=SUNKEN) 
-        
-        self.Label_Name = Label(self.master,text="Name")
-        self.Entry_Name   = Entry(self.master,width="15")
-        self.Entry_Name.configure(textvariable=self.Name,justify='center',fg="black")
-        self.Name.trace_variable("w", self.Entry_Reng_passes_Callback)
-        self.NormalColor =  self.Entry_Name.cget('bg')
-        
-        self.Label_Scale = Label(self.master,text="Scale")
-        self.Entry_Scale = Entry(self.master,width="15")
-        self.Entry_Scale.configure(textvariable=self.Scale,justify='center',fg="black")
-        self.Scale.trace_variable("w", self.Entry_Reng_passes_Callback)
-        self.NormalColor =  self.Entry_Scale.cget('bg')
-        
-        self.Label_Angle = Label(self.master,text="Angle")
-        self.Entry_Angle   = Entry(self.master,width="15")
-        self.Entry_Angle.configure(textvariable=self.Angle,justify='center',fg="black")
-        self.Angle.trace_variable("w", self.Entry_Reng_passes_Callback)
-        self.NormalColor =  self.Entry_Angle.cget('bg')
-
-        self.Label_PosX = Label(self.master,text="Position X")
-        self.Entry_PosX   = Entry(self.master,width="15")
-        self.Entry_PosX.configure(textvariable=self.PosX,justify='center',fg="black")
-        self.PosX.trace_variable("w", self.Entry_Veng_passes_Callback)
-        self.NormalColor =  self.Entry_PosX.cget('bg')
-
-        self.Label_PosY = Label(self.master,text="Position Y")
-        self.Entry_PosY   = Entry(self.master,width="15")
-        self.Entry_PosY.configure(textvariable=self.PosY,justify='center',fg="black")
-        self.PosY.trace_variable("w", self.Entry_Vcut_passes_Callback)
-        self.NormalColor =  self.Entry_PosY.cget('bg')
-        
-        self.Validate_Design_Tool = Button(self.master,text="Validate", command=self.Verify_Input_Design_Tool)
-        self.Cancel_Design_Tool = Button(self.master,text="Cancel", command=self.Hide_Design_Tool)
-        #cacher le menu vertical de Design tool settings
-        self.Hide_Design_Button = Button(self.master,text="Hide Design Tool", command=self.Hide_Design_Tool)
-
-
-
-
-
-
-
         # Advanced Column     #
         self.separator_vert = Frame(self.master, height=2, bd=1, relief=SUNKEN)
         self.Label_Advanced_column = Label(self.master,text="Advanced Settings",anchor=CENTER)
@@ -725,12 +665,12 @@ class Application(Frame):
         self.separator_adv2 = Frame(self.master, height=2, bd=1, relief=SUNKEN)  
 
         self.Label_Mirror_adv = Label(self.master,text="Mirror Design")
-        self.Checkbutton_Mirror_adv = Checkbutton(self.master,text=" ", anchor=W)
+        self.Checkbutton_Mirror_adv = Checkbutton(self.master,text=" ", anchor=W, state="disabled")
         self.Checkbutton_Mirror_adv.configure(variable=self.mirror)
         self.mirror.trace_variable("w", self.View_Refresh_and_Reset_RasterPath)
 
         self.Label_Rotate_adv = Label(self.master,text="Rotate Design")
-        self.Checkbutton_Rotate_adv = Checkbutton(self.master,text=" ", anchor=W)
+        self.Checkbutton_Rotate_adv = Checkbutton(self.master,text=" ", anchor=W, state="disabled")
         self.Checkbutton_Rotate_adv.configure(variable=self.rotate)
         self.rotate.trace_variable("w", self.View_Refresh_and_Reset_RasterPath)
 
@@ -829,8 +769,9 @@ class Application(Frame):
         top_File.add("command", label = "Read Settings File", command = self.menu_File_Open_Settings_File)
 
         top_File.add_separator()
-        top_File.add("command", label = "Open Design (SVG/DXF/G-Code)"  , command = self.menu_File_Open_Design)
-        top_File.add("command", label  = "Load Design with filling", command = self.menu_File_Open_File_with_Filling)
+        top_File.add("command", label = "Open Design (SVG)"  , command = self.menu_File_Open_Design)
+        top_File.add("command", label = "Append Design (SVG)"  , command = self.menu_File_Append_Design)
+        #top_File.add("command", label  = "Load Design with filling", command = self.menu_File_Open_File_with_Filling)
         top_File.add("command", label = "Reload Design"          , command = self.menu_Reload_Design)
 
         top_File.add_separator()    
@@ -884,10 +825,11 @@ class Application(Frame):
         top_Tools.add("command", label = "Calculate Raster Time", command = self.menu_Calc_Raster_Time)
         top_Tools.add("command", label = "Trace Design Boundary <Ctrl-t>", command = self.TRACE_Settings_Window)
         top_Tools.add_separator()
-        top_Tools.add("command", label = "Fill with design", command = self.menu_filling    )
+        top_Tools.add("command", label = "Fill with design", command = self.menu_filling, state="disabled")
         top_Tools.add_separator()
         top_Tools.add("command", label = "Go scale hardware", command = self.menu_go_scale_hardware)
         top_Tools.add("command", label = "Go scale software", command = self.menu_Tool_Open_Go_Scale_Software)
+
         top_Tools.add_separator()
         top_Tools.add("command", label = "Initialize Laser <Ctrl-i>", command = self.Initialize_Laser)
         top_Tools.add_cascade(label="USB", menu=USBmenu)
@@ -952,6 +894,21 @@ class Application(Frame):
         ##########################################################################
 
 ################################################################################
+    def __updateEcoords(self) -> None :
+        self.VengData = self.entities.getVengData()
+        self.RengData = self.entities.getRengData()
+        self.VcutgData = self.entities.getVcutData()
+        
+        designBounds = self.entities.getSheetBounds()
+        self.Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        self.src_Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        
+        if (self.RengData.image != None):
+            self.wim, self.him = self.RengData.image.size
+            self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
+            print("raster image size = (" + str(self.wim) + ", " + str(self.him) + ")")
+
+
     def entry_set(self, val2, calc_flag=0, new=0):
         if calc_flag == 0 and new==0:
             try:
@@ -1941,13 +1898,7 @@ class Application(Frame):
         else:
             default_types = design_types
         
-        fileselect = askopenfilename(filetypes=[default_types,
-                                            ("G-Code Files ", ("*.ngc","*.gcode","*.g","*.tap")),\
-                                            ("DXF Files ","*.dxf"),\
-                                            ("SVG Files ","*.svg"),\
-                                            ("All Files ","*"),\
-                                            ("Design Files ", ("*.svg","*.dxf"))],\
-                                            initialdir=init_dir)
+        fileselect = askopenfilename(filetypes=[("Design Files ", "*.svg")], initialdir=init_dir)
 
         if fileselect == () or (not os.path.isfile(fileselect)):
             return
@@ -1961,6 +1912,35 @@ class Application(Frame):
             self.Open_SVG(fileselect)
         else:
             self.Open_G_Code(fileselect)
+
+        ###############################################################
+        
+        # DESIGN_FILE est la variable qui stocke le fichier
+        
+        ###############################################################
+            
+        self.DESIGN_FILE = fileselect
+        self.menu_View_Refresh()
+
+    def menu_File_Append_Design(self,event=None):
+        if self.GUI_Disabled:
+            return
+        init_dir = os.path.dirname(self.DESIGN_FILE)
+        if ( not os.path.isdir(init_dir) ):
+            init_dir = self.HOME_DIR
+
+        Name, fileExtension = os.path.splitext(self.DESIGN_FILE)
+        TYPE=fileExtension.upper()
+        fileselect = askopenfilename(filetypes=[("SVG Files ","*.svg")], initialdir=init_dir)
+
+        if fileselect == () or (not os.path.isfile(fileselect)):
+            return
+            
+        Name, fileExtension = os.path.splitext(fileselect)
+        self.update_gui("Opening '%s'" % fileselect )
+        TYPE=fileExtension.upper()
+        if TYPE=='.SVG':
+            self.Append_SVG(fileselect)
 
         ###############################################################
         
@@ -1989,11 +1969,7 @@ class Application(Frame):
         else:
 
             print('Check button unchecked')
-            self.Open_with_filling_without_optimization()
-        
-    def affiche(self):
-        print(self.optimization_for_filling)
-        
+            self.Open_with_filling_without_optimization()    
         
     def menu_File_Open_File_with_Filling(self):
         windo_width = 350
@@ -2379,10 +2355,144 @@ class Application(Frame):
         ##########################
         self.RengData.set_image(svg_reader.raster_PIL)
         
+    
+        entity = Entity(self.RengData, self.VengData, self.VcutData, AABB(xmin, xmax, ymin, ymax))
+        self.entities.clear()
+        self.designToolPanel.clearSelect()
+        
+        self.entities.addEntity(entity)
+        self.RengData = self.entities.getRengData()
+        self.VcutData = self.entities.getVcutData()
+        self.VengData = self.entities.getVengData()
+        
+        designBounds = self.entities.getSheetBounds()
+        self.Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        self.src_Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        
         if (self.RengData.image != None):
     
             self.wim, self.him = self.RengData.image.size
             self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
+            
+            #self.make_raster_coords()
+        self.refreshTime()
+        margin=0.0625 # A bit of margin to prevent the warningwindow for designs that are close to being within the bounds
+        if self.Design_bounds[0] > self.VengData.bounds[0]+margin or\
+           self.Design_bounds[0] > self.VcutData.bounds[0]+margin or\
+           self.Design_bounds[1] < self.VengData.bounds[1]-margin or\
+           self.Design_bounds[1] < self.VcutData.bounds[1]-margin or\
+           self.Design_bounds[2] > self.VengData.bounds[2]+margin or\
+           self.Design_bounds[2] > self.VcutData.bounds[2]+margin or\
+           self.Design_bounds[3] < self.VengData.bounds[3]-margin or\
+           self.Design_bounds[3] < self.VcutData.bounds[3]-margin:
+            line1 = "Warning:\n"
+            line2 = "There is vector cut or vector engrave data located outside of the SVG page bounds.\n\n"
+            line3 = "K40 Whisperer will attempt to use all of the vector data.  "
+            line4 = "Please verify that the vector data is not outside of your lasers working area before engraving."
+            message_box("Warning", line1+line2+line3+line4)
+
+    def Append_SVG(self,filemname):
+        self.resetPath()
+               
+        self.SVG_FILE = filemname
+        svg_reader =  SVG_READER()
+        svg_reader.set_inkscape_path(self.inkscape_path.get())
+        self.input_dpi = 1000
+        svg_reader.image_dpi = self.input_dpi
+        svg_reader.timout = int(float( self.ink_timeout.get())*60.0) 
+        dialog_pxpi    = None
+        dialog_viewbox = None
+        
+        try:
+            try:
+                try:
+                    svg_reader.parse_svg(self.SVG_FILE)
+                    svg_reader.make_paths()
+                except SVG_PXPI_EXCEPTION as e:
+                    pxpi_dialog = pxpiDialog(root,
+                                           self.units.get(),
+                                           svg_reader.SVG_Size,
+                                           svg_reader.SVG_ViewBox,
+                                           svg_reader.SVG_inkscape_version)
+                    
+                    svg_reader = SVG_READER()
+                    svg_reader.set_inkscape_path(self.inkscape_path.get())
+                    if pxpi_dialog.result == None:
+                        return
+                    
+                    dialog_pxpi,dialog_viewbox = pxpi_dialog.result
+                    svg_reader.parse_svg(self.SVG_FILE)
+                    svg_reader.set_size(dialog_pxpi,dialog_viewbox)
+                    svg_reader.make_paths()
+                    
+            except SVG_TEXT_EXCEPTION as e:
+                svg_reader = SVG_READER()
+                svg_reader.set_inkscape_path(self.inkscape_path.get())
+                self.statusMessage.set("Converting TEXT to PATHS.")
+                self.master.update()
+                svg_reader.parse_svg(self.SVG_FILE)
+                if dialog_pxpi != None and dialog_viewbox != None:
+                    svg_reader.set_size(dialog_pxpi,dialog_viewbox)
+                svg_reader.make_paths(txt2paths=True)
+                
+        except Exception as e:
+            msg1 = "SVG Error: "
+            msg2 = "%s" %(e)
+            self.statusMessage.set((msg1+msg2).split("\n")[0] )
+            self.statusbar.configure( bg = 'red' )
+            message_box(msg1, msg2)
+            debug_message(traceback.format_exc())
+            return
+        except:
+            self.statusMessage.set("Unable To open SVG File: %s" %(filemname))
+            debug_message(traceback.format_exc())
+            return
+        xmax = svg_reader.Xsize/25.4
+        ymax = svg_reader.Ysize/25.4
+        xmin = 0
+        ymin = 0
+
+      
+            
+        ##########################
+        ###   Create ECOORDS   ###
+        ##########################
+        self.VcutData.make_ecoords(svg_reader.cut_lines,scale=1/25.4)
+        self.VengData.make_ecoords(svg_reader.eng_lines,scale=1/25.4) 
+        
+        ##########################
+        ### Fill ECOORDS       ###
+        ##########################
+        #xStep = self.VcutData.bounds[1] - self.VcutData.bounds[0]
+        #yStep = self.VcutData.bounds[3] - self.VcutData.bounds[2]
+        #laserX = float(self.LaserXsize.get()) / self.units_scale
+        #laserY = float(self.LaserYsize.get()) / self.units_scale
+        
+        #self.VcutData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+        #self.VengData.fill_area(xmax-xmin, ymax-ymin, laserX, -laserY)
+
+        ##########################
+        ###   Load Image       ###
+        ##########################
+        self.RengData.set_image(svg_reader.raster_PIL)
+
+        entity = Entity(self.RengData, self.VengData, self.VcutData, AABB(xmin, xmax, ymin, ymax))
+        self.entities.addEntity(entity)
+        self.RengData = self.entities.getRengData()
+        self.VcutData = self.entities.getVcutData()
+        self.VengData = self.entities.getVengData()
+        
+        designBounds = self.entities.getSheetBounds()
+        self.Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        self.src_Design_bounds = (designBounds.xmin, designBounds.xmax, designBounds.ymin, designBounds.ymax)
+        
+        if (self.RengData.image != None):
+            self.wim, self.him = self.RengData.image.size
+            self.aspect_ratio =  float(self.wim-1) / float(self.him-1)
+            print("raster image size = (" + str(self.wim) + ", " + str(self.him) + ")")
+        else :
+            print("No raster image")
+
             #self.make_raster_coords()
         self.refreshTime()
         margin=0.0625 # A bit of margin to prevent the warningwindow for designs that are close to being within the bounds
@@ -4556,8 +4666,6 @@ class Application(Frame):
         self.Master_Configure2(dummy_event,1)
     
         self.posGoScale = []
-        self.clean_list()
-        self.Plot_Data()
         xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
         W = xmax-xmin
         H = ymax-ymin
@@ -4586,8 +4694,6 @@ class Application(Frame):
                                   U_display))
 
         self.statusbar.configure( bg = 'white' )
-        self.Master_Configure(dummy_event,1)
-        self.Master_Configure2(dummy_event,1)
         
     def menu_Inside_First_Callback(self, varName, index, mode):
         if self.GcodeData.ecoords != []:
@@ -5262,7 +5368,8 @@ class Application(Frame):
             figure.save(self.DESIGN_FILE)
             self.menu_Reload_Design()
             
-                
+
+      
     def Master_Configure2(self, event, update=0):
         BUinit = self.h-70
         Yloc = BUinit
@@ -5289,63 +5396,25 @@ class Application(Frame):
                 place_object_in_right_panel_y = 10
                 
                 
-                if (self.designtool.get()): 
-                    if(self.advanced.get()):
+                self.designToolPanel.setVisible(self.designtool.get())
+                self.designToolPanel.updateUI(w, h)
+
+                if self.designtool.get() :
+                    if self.advanced.get():
                         print('design tool and advanced setting actived')
-                        self.PreviewCanvas.configure( width = self.w-240-size_advanced-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas.configure( width = self.w-240-size_advanced-size_design_tool, height = self.h-50)
                         self.PreviewCanvas_frame.place(x=220+size_advanced, y=10)
                     else :  
-                        self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50 )
+                        self.PreviewCanvas.configure( width = self.w-240-size_design_tool, height = self.h-50)
+                        self.PreviewCanvas_frame.place(x=220, y=10)
+                else :
+                    if self.advanced.get() :
+                        self.PreviewCanvas.configure( width = self.w-240-size_advanced, height = self.h-50)
+                        self.PreviewCanvas_frame.place(x=220+size_advanced, y=10)
+                    else :
+                        self.PreviewCanvas.configure( width = self.w-240, height = self.h-50)
                         self.PreviewCanvas_frame.place(x=220, y=10)
                        
-                    self.Label_Design_Tool.place(x=place_object_in_right_panel_x -30 ,y=place_object_in_right_panel_y)
-                    
-                    self.Hide_Design_Button.place (x=place_object_in_right_panel_x-70, y=Yloc, width=200, height=30)
-                    self.Cancel_Design_Tool.place (x=place_object_in_right_panel_x+35, y=Yloc-35, width=95, height=30)
-                    self.Validate_Design_Tool.place (x=place_object_in_right_panel_x-70, y=Yloc-35, width=95, height=30)
-                    self.Cancel_Design_Tool.configure(bg='light coral')
-                    self.Validate_Design_Tool.configure(bg='green')
-    
-            
-                    self.Label_PosY.place(x=place_object_in_right_panel_x-80, y=Yloc-70, width=110, height=21)
-                    self.Entry_PosY.place(x=place_object_in_right_panel_x+20, y=Yloc-70, width=110, height=23)
-                  
-                    self.Label_PosX.place(x=place_object_in_right_panel_x-80, y=Yloc-100, width=110, height=21)
-                    self.Entry_PosX.place(x=place_object_in_right_panel_x+20, y=Yloc-100, width=110, height=21)
-        
-                    self.Label_Angle.place(x=place_object_in_right_panel_x-80, y=Yloc-130, width=110, height=21)
-                    self.Entry_Angle.place(x=place_object_in_right_panel_x+20, y=Yloc-130, width=110, height=21)
-                    
-                    self.Label_Scale.place(x=place_object_in_right_panel_x-80, y=Yloc-160, width=110, height=21)
-                    self.Entry_Scale.place(x=place_object_in_right_panel_x+20, y=Yloc-160, width=110, height=21)
-                        
-                    self.Label_Name.place(x=place_object_in_right_panel_x-80, y=Yloc-190, width=110, height=21)
-                    self.Entry_Name.place(x=place_object_in_right_panel_x+20, y=Yloc-190, width=110, height=21)
-                        
-                    
-
-                else :
-                    self.Label_Design_Tool.place_forget()
-                    self.Label_PosY.place_forget()     
-                    self.Entry_PosY.place_forget()
-                    self.Label_PosX.place_forget()
-                    self.Entry_PosX.place_forget()
-                    self.Entry_Angle.place_forget()
-                    self.Label_Angle.place_forget()
-                    self.Label_Name.place_forget()
-                    self.Entry_Name.place_forget()
-                    self.Entry_Scale.place_forget()
-                    self.Label_Scale.place_forget()
-                   
-                   
-                    self.Validate_Design_Tool.place_forget()
-                    self.Cancel_Design_Tool.place_forget()
-                    self.Hide_Design_Button.place_forget()
-                    
-                    
-                  
-                    
- 
                 self.Set_Input_States()
             
             self.posGoScale = []    
@@ -5496,35 +5565,40 @@ class Application(Frame):
                             x_lft, y_bot, x_rgt, y_top, fill="gray80", outline="gray80", width = 0) )
 
 
+
+
+            
         ######################################
         ###       Plot Raster Image        ###
         ######################################
+        
         if self.RengData.image != None:
             
             if self.include_Reng.get():   
                 try:
                     new_SCALE = (1.0/self.PlotScale)/self.input_dpi
-                    if new_SCALE != self.SCALE:
+                    if new_SCALE != self.SCALE or self.entities.getRasterFlag():
                         self.SCALE = new_SCALE
                         nw=int(self.SCALE*self.wim)
                         nh=int(self.SCALE*self.him)
-
+    
+                        print("plotting picture of size=" + str(self.RengData.image.size))
                         plot_im = self.RengData.image.convert("L")                        
-##                        if self.unsharp_flag.get():
-##                            from PIL import ImageFilter
-##                            filter = ImageFilter.UnsharpMask()
-##                            filter.radius    = float(self.unsharp_r.get())
-##                            filter.percent   = int(float(self.unsharp_p.get()))
-##                            filter.threshold = int(float(self.unsharp_t.get()))
-##                            plot_im = plot_im.filter(filter)
-                        
+    ##                        if self.unsharp_flag.get():
+    ##                            from PIL import ImageFilter
+    ##                            filter = ImageFilter.UnsharpMask()
+    ##                            filter.radius    = float(self.unsharp_r.get())
+    ##                            filter.percent   = int(float(self.unsharp_p.get()))
+    ##                            filter.threshold = int(float(self.unsharp_t.get()))
+    ##                            plot_im = plot_im.filter(filter)
+                            
                         if self.negate.get():
                             plot_im = ImageOps.invert(plot_im)
-
+    
                         if self.halftone.get() == False:
                             plot_im = plot_im.point(lambda x: 0 if x<128 else 255, '1')
                             plot_im = plot_im.convert("L")
-
+    
                         if self.mirror.get():
                             plot_im = ImageOps.mirror(plot_im)
                         
@@ -5551,6 +5625,25 @@ class Application(Frame):
                
         else:
             self.UI_image = None
+
+
+        ######################################
+        ###  Plot selected entity outline  ###
+        ######################################
+        selectedEntity = self.designToolPanel.getSelectedEntity()
+        if selectedEntity != None : 
+            selectBounds : AABB
+            selectBounds = selectedEntity.getBounds()
+                
+            Xscale = 1/float(self.LaserXscale.get())
+            Yscale = 1/float(self.LaserYscale.get())
+            
+            x0 = x_lft + (selectBounds.xmin*Xscale + XlineShift ) / self.PlotScale 
+            x1 = x_lft + (selectBounds.xmax*Xscale + XlineShift ) / self.PlotScale
+            y0 = y_top - (selectBounds.ymin*Yscale-ymax + YlineShift ) / self.PlotScale
+            y1 = y_top - (selectBounds.ymax*Yscale-ymax + YlineShift ) / self.PlotScale
+            
+            self.segID.append(self.PreviewCanvas.create_rectangle( x0, y0, x1, y1, outline="green", width = 2))
 
 
         ######################################
