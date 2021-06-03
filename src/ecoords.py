@@ -104,7 +104,7 @@ class ECoord:
             ymin = self.bounds[2]
             ymax = self.bounds[3]
             pixels = np.array(self.image)
-            print("Starting picture parsing")
+            ##print("Starting picture parsing")
             start_time = datetime.datetime.now() 
             
             for y_px in range(0, h_px) :
@@ -132,14 +132,14 @@ class ECoord:
                 
                 # for x_px in range()
             end_time = datetime.datetime.now() 
-            print("total time=" + str((end_time-start_time).total_seconds()))
+            ##print("total time=" + str((end_time-start_time).total_seconds()))
             height_inch = float(h_px) / 1000.0 
             tmp_ymin = ymin
             ymin = height_inch - ymax
             ymax = height_inch - tmp_ymin
 
             self.bounds = (xmin, xmax, ymin, ymax)
-            print("picture bounds=" + str(self.bounds))
+            ##print("picture bounds=" + str(self.bounds))
 
                 
         
@@ -154,7 +154,7 @@ class ECoord:
         on = 0
         move = 0
         time = 0
-        for i in range(2,len(self.ecoords)):
+        for i in range(1,len(self.ecoords)):
             x1 = self.ecoords[i-1][0]
             y1 = self.ecoords[i-1][1]
             x2 = self.ecoords[i][0]
@@ -258,8 +258,11 @@ class ECoord:
         for i in range(0, ecoordSize) : 
             self.ecoords[i][0] += x
             self.ecoords[i][1] += y
+            
+        self.bounds = (self.bounds[0]+x, self.bounds[1]+x, self.bounds[2]+y, self.bounds[3]+y)
+
                 
-        self.computeEcoordsLen()
+        #self.computeEcoordsLen()
                 
             
             

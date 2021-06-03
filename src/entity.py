@@ -24,7 +24,7 @@ class AABB : # All unit are expressed in inches
         centerY = self.ymax - self.ymin
         return (centerX, centerY)
 
-    def merge(box1 : AABB, box2 : AABB) : 
+    def merge(box1 : AABB, box2 : AABB) -> AABB : 
         xmin = min(box1.xmin, box2.xmin)
         xmax = max(box1.xmax, box2.xmax)
         ymin = min(box1.ymin, box2.ymin)
@@ -50,16 +50,18 @@ class Entity:
     __transformedVengData : ECoord # Les données de base non transformées
     __transformedVcutData : ECoord # Les données de base non transformées
 
+    __rawBounds : AABB # La taille de la "feuille" du fichier chargé (en pouce)
     __bounds : AABB # L'AABB dde l'entité
     __pos : tuple[float, float] # La position de l'objet en pouces
     __angle : float # La rotation de l'objet en degré
     __scale : tuple[float, float] # L'échelle de l'objet
     __updateFlag : bool
 
-    def __init__(self, reng : ECoord, veng : ECoord, vcut : ECoord) -> None:
+    def __init__(self, reng : ECoord, veng : ECoord, vcut : ECoord, rawBounds : AABB) -> None:
         self.__rengData = reng
         self.__vengData = veng
         self.__vcutData = vcut
+        self.__rawBounds = rawBounds
 
         self.__name = "New Object"
         self.resetTransform()
@@ -106,6 +108,44 @@ class Entity:
         
     def getBounds(self) -> AABB :
         return self.__bounds
+    
+    def getRawBounds(self) -> AABB : 
+        return self.__rawBounds
+    
+    # Update the bounds.
+    # Because the bounds have changed, the ecoords must be moved to match the new bounds
+    # Ecoord pos are relative to the bounds size
+    def updateRawBounds(self, newBounds : AABB) -> None : 
+        assert(newBounds != None)
+        assert (newBounds.xmin == 0)
+        assert (newBounds.ymin == 0)
+        
+        
+        self.__rawBounds.xmax = newBounds.xmax
+        if newBounds.ymax == self.__rawBounds.ymax:
+            print("[Entity \"" + self.__name + "\"] Update bounds ignored")
+            return
+        
+        deltaY = newBounds.ymax - self.__rawBounds.ymax
+        self.__rawBounds.ymax = newBounds.ymax
+        print("[Entity \"" + self.__name + "\"] Update bounds (oldY=" + str(self.__rawBounds.ymax) + ", newY=" + str(newBounds.ymax) + ", dy=" + str(deltaY) + ")")
+
+        
+        if self.__rengData != None : 
+            self.__rengData.moveFnc(0, deltaY)
+        if self.__vengData != None : 
+            self.__vengData.moveFnc(0, deltaY)
+        if self.__vcutData != None:
+            self.__vcutData.moveFnc(0, deltaY)
+        if self.__transformedRengData != None :
+            self.__transformedRengData.moveFnc(0, deltaY)
+        if self.__transformedVengData != None :
+            self.__transformedVengData.moveFnc(0, deltaY)
+        if self.__transformedVcutData != None :
+            self.__transformedVcutData.moveFnc(0, deltaY)
+            
+        self.__updateFlag = True
+        self.__updateBounds()
         
     # x and y in inches
     def setPos(self, x : float, y : float) -> None :
@@ -136,20 +176,16 @@ class Entity:
 
         if(rengData != None) :
             self.__bounds = AABB(rengData.bounds[0], rengData.bounds[1], rengData.bounds[2], rengData.bounds[3])
-            print("reng bounds=" + str(rengData.bounds))
         if(vengData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, vengData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, vengData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, vengData.bounds[2])
             self.__bounds.ymax = max(self.__bounds.ymax, vengData.bounds[3])
-            print("veng bounds=" + str(vengData.bounds))
         if(vcutData != None) :
             self.__bounds.xmin = min(self.__bounds.xmin, vcutData.bounds[0])
             self.__bounds.xmax = max(self.__bounds.xmax, vcutData.bounds[1])
             self.__bounds.ymin = min(self.__bounds.ymin, vcutData.bounds[2])
             self.__bounds.ymax = max(self.__bounds.ymax, vcutData.bounds[3])
-            print("vcut bounds=" + str(vcutData.bounds))
-
 
     def __setTransformedIfEmpty(self) -> None :
         if(self.__transformedRengData == None) : 
@@ -178,15 +214,23 @@ class EntityList:
     __rengData : ECoord
     __vcutData : ECoord
     __vengData : ECoord
-    __bounds : AABB
+   # __bounds : AABB
+    __rawBounds : AABB
     __cacheFlag : bool # True : cache need to be updated
+    __rasterFlag : bool
 
     def __init__(self) -> None:
         self.clear()
 
     def addEntity(self, entity : Entity) -> None :
-        assert (entity != None) 
+        assert (entity != None)
+        
+        self.__rawBounds = AABB.merge(self.__rawBounds, entity.getRawBounds())
         self.__entities.append(entity)
+
+        for lentity in self.__entities : 
+            lentity.updateRawBounds(self.__rawBounds)
+        
         self.__cacheFlag = True
         
     #remove the entity given in argument from the list
@@ -212,8 +256,10 @@ class EntityList:
         self.__rengData = ECoord()
         self.__vcutData = ECoord()
         self.__vengData = ECoord()
-        self.__bounds = AABB(0, 0, 0, 0)
+        #self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
+        self.__rawBounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
         self.__cacheFlag = False
+        self.__rasterFlag = True
 
     def getRengData(self) -> ECoord :
         self.__updateCache()
@@ -226,6 +272,9 @@ class EntityList:
     def getVcutData(self) -> ECoord :
         self.__updateCache()
         return self.__vcutData
+    
+    def getSheetBounds(self) -> AABB :
+        return self.__rawBounds
 
     def __updateCacheFlag(self) -> None :
         if(self.__cacheFlag != True) : 
@@ -233,6 +282,11 @@ class EntityList:
                 if entity.getUpdateFlag() :
                     self.__cacheFlag = True
                     break
+
+    def getRasterFlag(self) -> bool :
+        flag = self.__rasterFlag
+        self.__rasterFlag = False 
+        return flag
 
 
     def __updateCache(self) -> None :
@@ -244,27 +298,82 @@ class EntityList:
             self.__vengData.reset()
             self.__vcutData.reset()
             
-            self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
+        #self.__bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
+
+            ## create picture with pixels in bounds 
+        
+
+            #picture = [255] * picWidth * picHeight
+            deltaY = 0
+
+            bounds = AABB(float("inf"), -float("inf"), float("inf"), -float("inf"))
 
             for entity in self.__entities :
-                print("entity(name=" + entity.getName() + ", bounds=" + str(entity.getBounds()))
-                self.__bounds = AABB.merge(self.__bounds, entity.getBounds())
+                bounds = AABB.merge(bounds, entity.getBounds())
+                #deltaY = min(deltaY, entity.getBounds().ymin)
+                #self.__rawBounds.xmax = max(self.__rawBounds.xmax, entity.getBounds().xmax)
+            
+            self.__rawBounds.ymax -= bounds.ymin
+            self.__rawBounds.xmax = bounds.xmax
+  
+    
+            for entity in self.__entities :
+                entity.updateRawBounds(self.__rawBounds)    
+            
+            print("[Design] bounds="+ str(self.__rawBounds))
+            picWidth = max(math.ceil(self.__rawBounds.xmax * 1000), 0)
+            picHeight = max(math.ceil(self.__rawBounds.ymax * 1000), 0)
+        
+            enablePicture = (picWidth != 0 and picHeight != 0)
+            
+            picture = PIL.Image.new("L", (picWidth, picHeight), (255)) if enablePicture else None
+            #print("creating picture(size=(" + str(picWidth) + ", " + str(picHeight) +"))")    
+            
+            for entity in self.__entities :
+                #print("entity(name=" + entity.getName() + ", bounds=" + str(entity.getBounds()))
+                ## Process the picture 
+                im = entity.getRengData().image
+                if im != None and picture != None:
+                    entityPos = entity.getPos()
+                    entityBounds = entity.getBounds()
+                    
+                    imWidth, imHeight = im.size
+                    
+                    pasteUp_px = math.ceil((self.__rawBounds.ymax - entityBounds.ymax) * 1000)
+                
+                    
+                    cropLeft = math.ceil((entityBounds.xmin-entityPos[0]) * 1000)
+                    cropRight = math.ceil((entityBounds.xmax-entityPos[0]) * 1000)
+                    cropUp_px = pasteUp_px + math.ceil(entityPos[1] * 1000)
+                    cropDown_px = cropUp_px + math.ceil((entityBounds.ymax-entityBounds.ymin) * 1000)
+                    
+                    pasteLeft = math.ceil(entityBounds.xmin * 1000)
+                    up = -math.ceil(entityPos[1] * 1000)
+                    
+                    cropRegion = (cropLeft, cropUp_px, cropRight, cropDown_px)
+                    #region = (left, up, right, down)
+                    crop = im.crop(cropRegion)
+                    #print("Entity \"" + entity.getName() + "\" image copied to " + str(region))
+                    picture.paste(crop, (pasteLeft, pasteUp_px))
+
+                
+                ## End picture process
+                
+                
                 self.__rengData.addEcoord(entity.getRengData())
                 self.__vengData.addEcoord(entity.getVengData())
                 self.__vcutData.addEcoord(entity.getVcutData())
                 entity.resetCacheFlag()
                 
-            ## create picture with pixels in bounds 
-            # picWidth = math.ceil(self.__bounds.xmax * 1000)
-            # picHeight = math.ceil(self.__bounds.ymax * 1000) 
-            # print("creating picture(size=(" + str(picWidth) + ", " + str(picHeight) +"))")
+                
+            #self.__rengData.image = PIL.Image.frombytes("L", (picWidth, picHeight), bytes(picture))
+            self.__rengData.image = picture
 
-            # picture = [0] * picWidth * picHeight
-            # self.__rengData.image = PIL.Image.frombytes("L", (picWidth, picHeight), bytes(picture))
 
             self.__rengData.computeEcoordsLen()
             self.__vengData.computeEcoordsLen()
             self.__vcutData.computeEcoordsLen()
         
             self.__cacheFlag = False
+            self.__rasterFlag = True
     

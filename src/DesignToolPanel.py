@@ -136,6 +136,7 @@ class DesignToolPanel:
 
 
         self.__entitiesList = EntityListView(self.master, entities, self.__onListChangeCallback)
+        self.clearSelect(False)
 
     def getSelectedEntity(self) -> Entity :
         return self.__currentEntity
@@ -253,15 +254,17 @@ class DesignToolPanel:
 
     #    self.entry_set(self.Entry_Vcut_passes, self.Entry_Vcut_passes_Check(), new=1)
 
-    def __selectEntity(self, index : int) -> None :
+    def clearSelect(self, refresh : bool = True) -> None:
+        self.__selectEntity(None, refresh)
+        
+    def __selectEntity(self, index : int, refresh : bool = True) -> None :
         if index == None :
-            pass
-           # self.__currentEntity = None
-           # self.__nameEntry.clearText()
-           # self.__scaleEntry.clearText()
-           # self.__angleEntry.clearText()
-            #self.__xPosEntry.clearText()
-            #self.__yPosEntry.clearText()
+            self.__currentEntity = None
+            self.__nameEntry.clearText()
+            self.__scaleEntry.clearText()
+            self.__angleEntry.clearText()
+            self.__xPosEntry.clearText()
+            self.__yPosEntry.clearText()
         else :
             entity : Entity
             entity = self.__entities.getEntities()[index]
@@ -271,7 +274,14 @@ class DesignToolPanel:
             pos = self.__currentEntity.getPos()
             self.__xPosEntry.setText(pos[0])
             self.__yPosEntry.setText(pos[1])
-        self.__refeshCallback()
+            
+        enable = index != None
+        self.__nameEntry.setEnabled(enable)
+        self.__xPosEntry.setEnabled(enable)
+        self.__yPosEntry.setEnabled(enable)
+        
+        if refresh : 
+            self.__refeshCallback()
 
 
     def __onListChangeCallback(self, event) -> None:
@@ -279,5 +289,3 @@ class DesignToolPanel:
         if selection:
             index = selection[0]
             self.__selectEntity(index)
-        else:
-            self.__selectEntity(None)

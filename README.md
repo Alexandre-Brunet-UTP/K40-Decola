@@ -28,3 +28,7 @@ During this project we have three main focusses :
 ## Sources
 The sources are resources for the software are located in the [src](https://github.com/Alexandre-Brunet-UTP/K40-Decola/tree/master/src) directory.
 
+## Informations about this version
+- Only SVG files are supported (other files format are disabled)
+- The filling is disabled
+- Design mirror and rotation are disabled
